@@ -3,1498 +3,342 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Finance North America Dashboard</title>
+<title>Finance North America — Manager Hub</title>
 <style>
-  :root {
-    --primary: #2563eb;
-    --primary-light: #dbeafe;
-    --primary-dark: #1d4ed8;
-    --success: #059669;
-    --success-light: #d1fae5;
-    --warning: #d97706;
-    --warning-light: #fef3c7;
-    --danger: #dc2626;
-    --danger-light: #fee2e2;
-    --purple: #7c3aed;
-    --purple-light: #ede9fe;
-    --gray-50: #f9fafb;
-    --gray-100: #f3f4f6;
-    --gray-200: #e5e7eb;
-    --gray-300: #d1d5db;
-    --gray-400: #9ca3af;
-    --gray-500: #6b7280;
-    --gray-600: #4b5563;
-    --gray-700: #374151;
-    --gray-800: #1f2937;
-    --sidebar-w: 260px;
-    --header-h: 64px;
-    --radius: 12px;
-    --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
-  }
+:root{
+  --primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;
+  --success:#059669;--success-light:#d1fae5;
+  --warning:#d97706;--warning-light:#fef3c7;
+  --danger:#dc2626;--danger-light:#fee2e2;
+  --purple:#7c3aed;--purple-light:#ede9fe;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
+  --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
+  --gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;
+  --radius:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;font-size:14px;}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* HEADER */
+header{height:64px;background:#fff;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
+.header-left{display:flex;align-items:center;gap:14px;}
+.brand-icon{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.brand-text h1{font-size:17px;font-weight:800;}
+.brand-text p{font-size:11px;color:var(--gray-500);}
+.mgr-pill{background:var(--purple-light);color:var(--purple);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;}
+.header-right{display:flex;align-items:center;gap:10px;}
 
-  body {
-    font-family: 'Segoe UI', Arial, sans-serif;
-    background: var(--gray-50);
-    color: var(--gray-800);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    font-size: 14px;
-  }
+/* BUTTONS */
+.btn{border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 16px;transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-family:inherit;}
+.btn-primary{background:var(--primary);color:#fff;} .btn-primary:hover{background:var(--primary-dark);}
+.btn-ghost{background:var(--gray-100);color:var(--gray-700);} .btn-ghost:hover{background:var(--gray-200);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-full{width:100%;justify-content:center;margin-top:4px;}
 
-  /* HEADER */
-  header {
-    height: var(--header-h);
-    background: #fff;
-    border-bottom: 1px solid var(--gray-200);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 24px;
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    box-shadow: var(--shadow);
-  }
-  .header-brand { display: flex; align-items: center; gap: 12px; }
-  .brand-icon {
-    width: 38px; height: 38px;
-    background: linear-gradient(135deg, var(--primary), #818cf8);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 18px; font-weight: 700;
-  }
-  .brand-text h1 { font-size: 17px; font-weight: 700; color: var(--gray-800); }
-  .brand-text p { font-size: 12px; color: var(--gray-500); }
-  .header-actions { display: flex; align-items: center; gap: 10px; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 8px 16px; border-radius: 8px; border: none;
-    font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all .15s ease; font-family: inherit;
-  }
-  .btn-primary { background: var(--primary); color: #fff; }
-  .btn-primary:hover { background: var(--primary-dark); }
-  .btn-ghost { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-300); }
-  .btn-ghost:hover { background: var(--gray-100); }
-  .btn-sm { padding: 5px 12px; font-size: 12px; }
-  .btn-danger { background: var(--danger); color: #fff; }
-  .btn-danger:hover { background: #b91c1c; }
+/* SYNC */
+.sync-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;transition:all .3s;}
+.sync-status.idle  {color:var(--gray-400);background:var(--gray-100);}
+.sync-status.saving{color:var(--warning);background:var(--warning-light);}
+.sync-status.loaded{color:var(--success);background:var(--success-light);}
+.sync-status.error {color:var(--danger);background:var(--danger-light);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+@keyframes spin-ring{to{transform:rotate(360deg);}}
 
-  .notif-btn {
-    width: 36px; height: 36px; border-radius: 8px;
-    background: var(--gray-100); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; position: relative; transition: background .15s;
-  }
-  .notif-btn:hover { background: var(--gray-200); }
-  .notif-badge {
-    position: absolute; top: -2px; right: -2px;
-    width: 16px; height: 16px; background: var(--danger);
-    border-radius: 50%; font-size: 9px; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; border: 2px solid #fff;
-  }
-  .manager-avatar {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb, #818cf8);
-    color: #fff; font-weight: 700; font-size: 14px;
-    display: flex; align-items: center; justify-content: center;
-  }
+/* MAIN */
+main{max-width:1100px;margin:0 auto;padding:36px 24px;}
+.page-title{font-size:22px;font-weight:800;margin-bottom:6px;}
+.page-sub  {font-size:14px;color:var(--gray-500);margin-bottom:32px;}
 
-  /* LAYOUT */
-  .layout { display: flex; margin-top: var(--header-h); min-height: calc(100vh - var(--header-h)); }
+/* EMPLOYEE CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
 
-  /* SIDEBAR */
-  .sidebar {
-    width: var(--sidebar-w);
-    background: #fff;
-    border-right: 1px solid var(--gray-200);
-    position: fixed;
-    top: var(--header-h); left: 0; bottom: 0;
-    overflow-y: auto;
-    padding: 16px 0;
-    display: flex; flex-direction: column;
-    z-index: 50;
-  }
-  .sidebar-section-title {
-    font-size: 11px; font-weight: 700; color: var(--gray-400);
-    text-transform: uppercase; letter-spacing: .8px;
-    padding: 8px 16px 4px;
-  }
-  .nav-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 16px; cursor: pointer;
-    border-radius: 8px; margin: 1px 8px;
-    transition: all .15s; color: var(--gray-600); font-size: 13px;
-    font-weight: 500; border: none; background: none; width: calc(100% - 16px);
-    text-align: left;
-  }
-  .nav-item:hover { background: var(--gray-100); color: var(--gray-800); }
-  .nav-item.active { background: var(--primary-light); color: var(--primary); }
-  .nav-item .nav-icon { font-size: 16px; }
-  .nav-item .nav-badge {
-    margin-left: auto;
-    background: var(--danger); color: #fff;
-    font-size: 10px; font-weight: 700;
-    padding: 1px 6px; border-radius: 10px;
-    min-width: 18px; text-align: center;
-  }
-  .nav-item .nav-badge.orange { background: var(--warning); }
+/* EMPLOYEE CARD */
+.emp-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s;}
+.emp-card:hover{box-shadow:var(--shadow-md);}
+.card-banner{height:8px;}
+.card-banner.kim   {background:linear-gradient(90deg,#2563eb,#7c3aed);}
+.card-banner.ronit {background:linear-gradient(90deg,#059669,#2563eb);}
+.card-banner.vicky {background:linear-gradient(90deg,#d97706,#dc2626);}
+.card-inner{padding:22px;}
+.card-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}
+.avatar.kim   {background:linear-gradient(135deg,#2563eb,#7c3aed);}
+.avatar.ronit {background:linear-gradient(135deg,#059669,#2563eb);}
+.avatar.vicky {background:linear-gradient(135deg,#d97706,#dc2626);}
+.card-name{font-size:18px;font-weight:800;}
+.card-role{font-size:12px;color:var(--gray-500);}
+.card-loading{color:var(--gray-400);font-size:13px;text-align:center;padding:16px 0;}
 
-  .member-nav {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 16px; cursor: pointer;
-    border-radius: 8px; margin: 1px 8px;
-    transition: all .15s; color: var(--gray-600); font-size: 13px;
-    border: none; background: none; width: calc(100% - 16px);
-    text-align: left;
-  }
-  .member-nav:hover { background: var(--gray-100); }
-  .member-nav.active { background: var(--primary-light); }
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
+.stat-box{background:var(--gray-50);border-radius:10px;padding:12px 10px;text-align:center;border:1.5px solid var(--gray-100);}
+.stat-num{font-size:22px;font-weight:800;line-height:1;}
+.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--gray-500);margin-top:4px;}
+.stat-box.total  .stat-num{color:var(--gray-700);}
+.stat-box.pastdue .stat-num{color:var(--danger);}  .stat-box.pastdue{background:var(--danger-light);border-color:#fca5a5;}
+.stat-box.active .stat-num{color:var(--primary);} .stat-box.active{background:var(--primary-light);border-color:#93c5fd;}
+.stat-box.done   .stat-num{color:var(--success);} .stat-box.done  {background:var(--success-light);border-color:#6ee7b7;}
 
-  .member-avatar-sm {
-    width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 12px; color: #fff; flex-shrink: 0;
-  }
-  .member-info-sm .name { font-weight: 600; font-size: 13px; color: var(--gray-800); }
-  .member-info-sm .role { font-size: 11px; color: var(--gray-400); }
-  .member-task-count { margin-left: auto; font-size: 11px; color: var(--gray-400); font-weight: 600; }
+/* TASK PREVIEW */
+.preview-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-500);margin-bottom:8px;}
+.preview-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gray-100);}
+.preview-item:last-child{border-bottom:none;}
+.preview-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.preview-dot.high  {background:var(--danger);}
+.preview-dot.medium{background:var(--warning);}
+.preview-dot.low   {background:var(--success);}
+.preview-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.preview-date{font-size:11px;color:var(--gray-400);flex-shrink:0;}
+.preview-date.red{color:var(--danger);font-weight:700;}
+.preview-empty{font-size:12px;color:var(--gray-400);text-align:center;padding:10px 0;}
 
-  .sidebar-divider { height: 1px; background: var(--gray-200); margin: 12px 16px; }
+/* SETUP STEPS */
+.setup-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);} .setup-step:last-child{border-bottom:none;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-t{font-size:13px;font-weight:700;margin-bottom:2px;}
+.step-d{font-size:12px;color:var(--gray-500);line-height:1.55;}
+.step-d code{background:var(--gray-100);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px;}
 
-  /* MAIN */
-  .main { margin-left: var(--sidebar-w); flex: 1; padding: 24px; overflow-x: hidden; }
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
+.modal-title{font-size:17px;font-weight:800;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray-400);padding:4px 8px;border-radius:6px;} .modal-close:hover{background:var(--gray-100);}
+.modal-body{padding:20px 24px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid var(--gray-100);}
+.fg{margin-bottom:16px;}
+.fl{display:block;font-size:11px;font-weight:700;color:var(--gray-500);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
+.fi{width:100%;border:1.5px solid var(--gray-200);border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;transition:border-color .2s;}
+.fi:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
 
-  /* PAGE VIEWS */
-  .view { display: none; }
-  .view.active { display: block; }
+/* LOADER / TOAST */
+.loader{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.loader.hidden{display:none;}
+.spinner{width:38px;height:38px;border:4px solid var(--gray-200);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
 
-  /* STATS GRID */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .stat-card {
-    background: #fff; border-radius: var(--radius); padding: 20px;
-    box-shadow: var(--shadow); display: flex; align-items: flex-start; gap: 14px;
-    border: 1px solid var(--gray-200); transition: transform .15s, box-shadow .15s;
-  }
-  .stat-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
-  .stat-icon {
-    width: 44px; height: 44px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; flex-shrink: 0;
-  }
-  .stat-body .stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
-  .stat-body .stat-label { font-size: 12px; color: var(--gray-500); margin-top: 4px; font-weight: 500; }
-  .stat-body .stat-sub { font-size: 11px; margin-top: 6px; font-weight: 600; }
-  .stat-blue .stat-icon { background: var(--primary-light); }
-  .stat-green .stat-icon { background: var(--success-light); }
-  .stat-orange .stat-icon { background: var(--warning-light); }
-  .stat-red .stat-icon { background: var(--danger-light); }
-  .stat-blue .stat-value { color: var(--primary); }
-  .stat-green .stat-value { color: var(--success); }
-  .stat-orange .stat-value { color: var(--warning); }
-  .stat-red .stat-value { color: var(--danger); }
-  .stat-blue .stat-sub { color: var(--primary); }
-  .stat-green .stat-sub { color: var(--success); }
-  .stat-orange .stat-sub { color: var(--warning); }
-  .stat-red .stat-sub { color: var(--danger); }
-
-  /* SECTION HEADER */
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .section-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
-  .section-subtitle { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
-
-  /* FILTER BAR */
-  .filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-  .filter-group { display: flex; align-items: center; gap: 6px; }
-  .filter-label { font-size: 12px; color: var(--gray-500); font-weight: 600; }
-  .filter-chip {
-    padding: 5px 12px; border-radius: 20px; border: 1px solid var(--gray-300);
-    background: #fff; cursor: pointer; font-size: 12px; font-weight: 500;
-    color: var(--gray-600); transition: all .15s; font-family: inherit;
-  }
-  .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
-  .filter-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-  .search-input {
-    padding: 7px 12px; border-radius: 8px; border: 1px solid var(--gray-300);
-    font-size: 13px; outline: none; font-family: inherit; color: var(--gray-800);
-    transition: border-color .15s; min-width: 200px;
-  }
-  .search-input:focus { border-color: var(--primary); }
-
-  /* KANBAN */
-  .kanban-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: start; }
-  .kanban-col { background: var(--gray-100); border-radius: var(--radius); padding: 12px; min-height: 200px; }
-  .kanban-col-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px; padding: 4px 4px 8px; border-bottom: 2px solid transparent;
-  }
-  .kanban-col-header.open { border-color: var(--gray-400); }
-  .kanban-col-header.inprogress { border-color: var(--warning); }
-  .kanban-col-header.done { border-color: var(--success); }
-  .kanban-col-header.overdue { border-color: var(--danger); }
-  .kanban-col-header.recurring { border-color: #0891b2; }
-  .col-title { font-size: 13px; font-weight: 700; }
-  .col-title.open { color: var(--gray-600); }
-  .col-title.inprogress { color: var(--warning); }
-  .col-title.done { color: var(--success); }
-  .col-title.overdue { color: var(--danger); }
-  .col-title.recurring { color: #0891b2; }
-  .col-count { font-size: 11px; font-weight: 700; padding: 1px 8px; border-radius: 10px; color: #fff; }
-  .col-count.open { background: var(--gray-400); }
-  .col-count.inprogress { background: var(--warning); }
-  .col-count.done { background: var(--success); }
-  .col-count.overdue { background: var(--danger); }
-  .col-count.recurring { background: #0891b2; }
-
-  /* TASK CARD */
-  .task-card {
-    background: #fff; border-radius: 10px; padding: 14px;
-    box-shadow: var(--shadow); margin-bottom: 10px;
-    border: 1px solid var(--gray-200); cursor: pointer;
-    transition: all .15s; border-left: 3px solid transparent;
-  }
-  .task-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .task-card.overdue { border-left-color: var(--danger); background: #fffbfb; }
-  .task-card.priority-high { border-left-color: var(--danger); }
-  .task-card.priority-medium { border-left-color: var(--warning); }
-  .task-card.priority-low { border-left-color: var(--success); }
-  .task-card.done-card { opacity: .75; }
-  .task-card-title { font-size: 13px; font-weight: 700; color: var(--gray-800); margin-bottom: 6px; line-height: 1.4; }
-  .task-card-desc { font-size: 12px; color: var(--gray-500); line-height: 1.5; margin-bottom: 10px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .task-card-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .priority-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; letter-spacing: .3px; }
-  .priority-badge.high { background: var(--danger-light); color: var(--danger); }
-  .priority-badge.medium { background: var(--warning-light); color: var(--warning); }
-  .priority-badge.low { background: var(--success-light); color: var(--success); }
-  .due-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; display: flex; align-items: center; gap: 3px; }
-  .due-badge.on-time { background: var(--gray-100); color: var(--gray-500); }
-  .due-badge.near { background: var(--warning-light); color: var(--warning); }
-  .due-badge.overdue { background: var(--danger-light); color: var(--danger); }
-  .assignee-chip { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--gray-500); margin-left: auto; }
-  .assignee-dot { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; }
-  .comment-count { font-size: 11px; color: var(--gray-400); display: flex; align-items: center; gap: 3px; }
-  .task-card-overdue-banner {
-    font-size: 10px; font-weight: 700; color: var(--danger);
-    background: var(--danger-light); padding: 3px 8px; border-radius: 6px;
-    margin-bottom: 8px; display: inline-flex; align-items: center; gap: 4px;
-  }
-
-  /* LIST VIEW */
-  .task-list { display: flex; flex-direction: column; gap: 10px; }
-  .task-list-item {
-    background: #fff; border-radius: var(--radius); padding: 16px 18px;
-    box-shadow: var(--shadow); border: 1px solid var(--gray-200);
-    display: flex; align-items: center; gap: 14px; cursor: pointer;
-    transition: all .15s; border-left: 4px solid transparent;
-  }
-  .task-list-item:hover { box-shadow: var(--shadow-md); }
-  .task-list-item.overdue { border-left-color: var(--danger); background: #fffbfb; }
-  .task-list-item.inprogress { border-left-color: var(--warning); }
-  .task-list-item.done { border-left-color: var(--success); opacity: .75; }
-  .task-list-item.open { border-left-color: var(--gray-300); }
-  .task-status-circle {
-    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid; display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-  }
-  .task-status-circle.open { border-color: var(--gray-300); color: transparent; }
-  .task-status-circle.inprogress { border-color: var(--warning); color: var(--warning); background: var(--warning-light); }
-  .task-status-circle.done { border-color: var(--success); color: var(--success); background: var(--success-light); }
-  .task-status-circle.overdue { border-color: var(--danger); color: var(--danger); background: var(--danger-light); }
-  .task-list-body { flex: 1; min-width: 0; }
-  .task-list-title { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 3px; }
-  .task-list-sub { font-size: 12px; color: var(--gray-500); display: flex; align-items: center; gap: 8px; }
-  .task-list-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-  /* STATUS BADGE */
-  .status-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
-  .status-badge.open { background: var(--gray-100); color: var(--gray-600); }
-  .status-badge.inprogress { background: var(--warning-light); color: var(--warning); }
-  .status-badge.done { background: var(--success-light); color: var(--success); }
-  .status-badge.overdue { background: var(--danger-light); color: var(--danger); }
-  .status-badge.waiting { background: var(--purple-light); color: var(--purple); }
-  .status-badge.recurring { background: #cffafe; color: #0891b2; }
-
-  /* MEMBER VIEW */
-  .member-view-header {
-    background: #fff; border-radius: var(--radius); padding: 24px;
-    box-shadow: var(--shadow); border: 1px solid var(--gray-200);
-    margin-bottom: 20px; display: flex; align-items: center; gap: 20px;
-  }
-  .member-avatar-lg {
-    width: 64px; height: 64px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 24px; color: #fff; flex-shrink: 0;
-  }
-  .member-header-info { flex: 1; }
-  .member-header-info h2 { font-size: 20px; font-weight: 800; }
-  .member-header-info p { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
-  .member-stats { display: flex; gap: 20px; }
-  .member-stat { text-align: center; }
-  .member-stat .val { font-size: 22px; font-weight: 800; }
-  .member-stat .lbl { font-size: 11px; color: var(--gray-500); }
-  .progress-bar-wrap { margin-top: 12px; }
-  .progress-bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; font-weight: 600; }
-  .progress-bar-bg { height: 8px; background: var(--gray-200); border-radius: 10px; overflow: hidden; }
-  .progress-bar-fill { height: 100%; border-radius: 10px; transition: width .5s ease; }
-
-  /* MEMBERS GRID */
-  .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .member-card {
-    background: #fff; border-radius: var(--radius); padding: 20px;
-    box-shadow: var(--shadow); border: 1px solid var(--gray-200);
-    cursor: pointer; transition: all .15s;
-  }
-  .member-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-  .member-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-  .member-card-info .name { font-size: 15px; font-weight: 700; }
-  .member-card-info .role { font-size: 12px; color: var(--gray-500); }
-  .member-card-stats { display: flex; gap: 12px; margin-bottom: 12px; }
-  .member-mini-stat { flex: 1; text-align: center; background: var(--gray-50); border-radius: 8px; padding: 8px 4px; }
-  .member-mini-stat .v { font-size: 18px; font-weight: 800; }
-  .member-mini-stat .l { font-size: 10px; color: var(--gray-500); }
-
-  /* MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.4);
-    z-index: 1000; display: flex; align-items: center; justify-content: center;
-    opacity: 0; pointer-events: none; transition: opacity .2s;
-    backdrop-filter: blur(2px);
-  }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal {
-    background: #fff; border-radius: 16px; padding: 28px;
-    max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto;
-    box-shadow: var(--shadow-lg); transform: translateY(10px); transition: transform .2s;
-  }
-  .modal-overlay.open .modal { transform: translateY(0); }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .modal-title { font-size: 18px; font-weight: 800; }
-  .modal-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--gray-400); padding: 4px; border-radius: 6px; }
-  .modal-close:hover { background: var(--gray-100); color: var(--gray-700); }
-
-  .form-group { margin-bottom: 16px; }
-  .form-label { display: block; font-size: 12px; font-weight: 700; color: var(--gray-700); margin-bottom: 6px; }
-  .form-input, .form-select, .form-textarea {
-    width: 100%; padding: 9px 12px; border: 1px solid var(--gray-300);
-    border-radius: 8px; font-size: 13px; font-family: inherit;
-    color: var(--gray-800); outline: none; transition: border-color .15s; background: #fff;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--primary); }
-  .form-textarea { min-height: 80px; resize: vertical; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-
-  /* TASK DETAIL */
-  .task-detail { max-width: 720px; }
-  .task-detail-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .task-detail-title { font-size: 20px; font-weight: 800; line-height: 1.4; margin-bottom: 8px; }
-  .task-detail-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--gray-500); }
-  .task-detail-meta span { display: flex; align-items: center; gap: 4px; }
-  .detail-section-title { font-size: 13px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; }
-  .task-desc-box {
-    background: var(--gray-50); border-radius: 8px; padding: 14px;
-    font-size: 13px; color: var(--gray-700); line-height: 1.7;
-    border: 1px solid var(--gray-200);
-  }
-  .status-changer { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .status-btn {
-    padding: 6px 14px; border-radius: 20px; border: 2px solid;
-    cursor: pointer; font-size: 12px; font-weight: 700; font-family: inherit;
-    transition: all .15s; background: #fff;
-  }
-  .status-btn.open { border-color: var(--gray-300); color: var(--gray-600); }
-  .status-btn.open:hover, .status-btn.open.selected { background: var(--gray-100); border-color: var(--gray-500); }
-  .status-btn.inprogress { border-color: var(--warning); color: var(--warning); }
-  .status-btn.inprogress:hover, .status-btn.inprogress.selected { background: var(--warning-light); }
-  .status-btn.done { border-color: var(--success); color: var(--success); }
-  .status-btn.done:hover, .status-btn.done.selected { background: var(--success-light); }
-  .status-btn.recurring { border-color: #0891b2; color: #0891b2; }
-  .status-btn.recurring:hover, .status-btn.recurring.selected { background: #cffafe; }
-
-  /* COMMENTS */
-  .comments-section { margin-top: 20px; }
-  .comments-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-  .comment-item { display: flex; gap: 10px; align-items: flex-start; }
-  .comment-avatar {
-    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: #fff; margin-top: 2px;
-  }
-  .comment-bubble { flex: 1; background: var(--gray-50); border-radius: 10px; padding: 10px 12px; border: 1px solid var(--gray-200); }
-  .comment-bubble.manager-comment { background: var(--primary-light); border-color: #bfdbfe; }
-  .comment-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .comment-author { font-size: 12px; font-weight: 700; color: var(--gray-700); }
-  .comment-author.manager { color: var(--primary); }
-  .comment-time { font-size: 11px; color: var(--gray-400); }
-  .comment-manager-tag { font-size: 10px; background: var(--primary); color: #fff; padding: 1px 6px; border-radius: 6px; font-weight: 700; }
-  .comment-text { font-size: 13px; color: var(--gray-700); line-height: 1.5; }
-  .comment-input-wrap { display: flex; gap: 8px; align-items: flex-end; }
-  .comment-input-wrap textarea {
-    flex: 1; padding: 9px 12px; border: 1px solid var(--gray-300);
-    border-radius: 8px; font-size: 13px; font-family: inherit;
-    color: var(--gray-800); outline: none; resize: none; min-height: 60px;
-    transition: border-color .15s;
-  }
-  .comment-input-wrap textarea:focus { border-color: var(--primary); }
-
-  /* OVERDUE BANNER */
-  .overdue-banner {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    color: #fff; border-radius: var(--radius); padding: 16px 20px;
-    margin-bottom: 20px; display: flex; align-items: center; gap: 14px;
-    box-shadow: var(--shadow);
-  }
-  .overdue-banner-icon { font-size: 28px; }
-  .overdue-banner-text h3 { font-size: 14px; font-weight: 800; margin-bottom: 2px; }
-  .overdue-banner-text p { font-size: 12px; opacity: .85; }
-  .overdue-tasks-list { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-  .overdue-tag {
-    background: rgba(255,255,255,.2); padding: 2px 10px;
-    border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer;
-  }
-  .overdue-tag:hover { background: rgba(255,255,255,.35); }
-
-  /* TAG */
-  .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--purple-light); color: var(--purple); }
-
-  /* EMPTY STATE */
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
-  .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
-  .empty-state p { font-size: 14px; }
-
-  /* VIEW TOGGLE */
-  .view-toggle { display: flex; gap: 4px; background: var(--gray-100); border-radius: 8px; padding: 3px; }
-  .view-toggle-btn {
-    padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer;
-    font-size: 12px; font-weight: 600; color: var(--gray-500);
-    background: none; font-family: inherit; transition: all .15s;
-  }
-  .view-toggle-btn.active { background: #fff; color: var(--gray-800); box-shadow: var(--shadow); }
-
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .animate-in { animation: fadeIn .2s ease forwards; }
-
-  /* SYNC STATUS */
-  .sync-status {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px; font-weight: 600; padding: 5px 12px;
-    border-radius: 20px; transition: all .3s;
-  }
-  .sync-status.idle    { color: var(--gray-400); background: var(--gray-100); }
-  .sync-status.saving  { color: var(--warning);  background: var(--warning-light); }
-  .sync-status.saved   { color: var(--success);  background: var(--success-light); }
-  .sync-status.error   { color: var(--danger);   background: var(--danger-light); }
-  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-  .sync-status.saving .sync-dot { animation: pulse .8s infinite; }
-
-  /* SETUP MODAL */
-  .setup-modal { max-width: 480px; }
-  .setup-steps { counter-reset: step; margin: 16px 0; }
-  .setup-step {
-    display: flex; gap: 14px; align-items: flex-start;
-    padding: 12px 0; border-bottom: 1px solid var(--gray-100);
-  }
-  .setup-step:last-child { border-bottom: none; }
-  .step-num {
-    width: 26px; height: 26px; border-radius: 50%; background: var(--primary);
-    color: #fff; font-size: 12px; font-weight: 800;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
-  }
-  .step-body .step-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
-  .step-body .step-desc  { font-size: 12px; color: var(--gray-500); line-height: 1.6; }
-  .step-body code {
-    background: var(--gray-100); padding: 1px 6px; border-radius: 4px;
-    font-family: monospace; font-size: 11px; color: var(--gray-700);
-  }
-
-  /* LOADING OVERLAY */
-  .loading-overlay {
-    position: fixed; inset: 0; background: rgba(255,255,255,.9);
-    z-index: 2000; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 16px;
-  }
-  .loading-overlay.hidden { display: none; }
-  .spinner {
-    width: 40px; height: 40px; border: 4px solid var(--gray-200);
-    border-top-color: var(--primary); border-radius: 50%;
-    animation: spin .7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 1400px) {
-    .kanban-board { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (max-width: 1200px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    .kanban-board { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (max-width: 768px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; }
-    .stats-grid { grid-template-columns: 1fr 1fr; }
-    .kanban-board { grid-template-columns: 1fr; }
-    .form-row { grid-template-columns: 1fr; }
-  }
+@media(max-width:700px){
+  .cards-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  header{padding:0 16px;}
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-brand">
+  <div class="header-left">
     <div class="brand-icon">F</div>
     <div class="brand-text">
       <h1>Finance North America</h1>
-      <p>Team Task Management Dashboard</p>
+      <p>Manager Hub</p>
     </div>
+    <div class="mgr-pill">Manager View</div>
   </div>
-  <div class="header-actions">
-    <div class="sync-status idle" id="syncStatus"><div class="sync-dot"></div><span id="syncText">Not connected</span></div>
+  <div class="header-right">
+    <div class="sync-status idle" id="syncEl"><div class="sync-dot"></div><span id="syncTxt">Not connected</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
     <button class="btn btn-ghost btn-sm" onclick="openSetup()">⚙ Setup</button>
-    <button class="btn btn-ghost btn-sm" onclick="refreshFromSheets()">↻ Refresh</button>
-    <button class="btn btn-ghost btn-sm" onclick="exportData()">⬇ Export</button>
-    <button class="btn btn-primary" onclick="openAddTask()">+ New Task</button>
-    <button class="notif-btn" id="notifBtn">
-      🔔
-      <span class="notif-badge" id="notifBadge" style="display:none">0</span>
-    </button>
-    <div class="manager-avatar" title="Manager">M</div>
   </div>
 </header>
 
-<div class="layout">
+<main>
+  <div class="page-title">Team Overview</div>
+  <div class="page-sub">Click <strong>Open Dashboard</strong> to view and manage each team member's tasks.</div>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-section-title">Views</div>
-    <button class="nav-item active" id="nav-accounting" onclick="showView('accounting')">
-      <span class="nav-icon">📋</span> Accounting All
-      <span class="nav-badge orange" id="teamBadge">0</span>
-    </button>
-    <button class="nav-item" id="nav-members" onclick="showView('members')">
-      <span class="nav-icon">👥</span> All Team Members
-    </button>
-
-    <div class="sidebar-divider"></div>
-    <div class="sidebar-section-title">Team Members</div>
-    <div id="sidebarMembers"></div>
-
-  </aside>
-
-  <main class="main">
-
-    <!-- ACCOUNTING ALL VIEW -->
-    <div class="view active" id="view-accounting">
-      <div id="overdueBanner" style="display:none" class="overdue-banner">
-        <div class="overdue-banner-icon">🚨</div>
-        <div class="overdue-banner-text">
-          <h3>Past Due Tasks!</h3>
-          <p>The following tasks have passed their due date:</p>
-          <div class="overdue-tasks-list" id="overdueTasksList"></div>
-        </div>
-      </div>
-
-      <div class="stats-grid" id="statsGrid"></div>
-
-      <div class="section-header">
-        <div>
-          <div class="section-title">📋 Accounting All</div>
-          <div class="section-subtitle">Tasks relevant to the entire Finance North America team</div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <div class="view-toggle">
-            <button class="view-toggle-btn active" id="kanbanToggle" onclick="setLayout('kanban')">Kanban</button>
-            <button class="view-toggle-btn" id="listToggle" onclick="setLayout('list')">List</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="filter-bar">
-        <div class="filter-group">
-          <span class="filter-label">Status:</span>
-          <button class="filter-chip active" onclick="setFilter('status','all',this)">All</button>
-          <button class="filter-chip" onclick="setFilter('status','open',this)">Open</button>
-          <button class="filter-chip" onclick="setFilter('status','inprogress',this)">In Progress</button>
-          <button class="filter-chip" onclick="setFilter('status','done',this)">Done</button>
-          <button class="filter-chip" onclick="setFilter('status','overdue',this)">Past Due</button>
-          <button class="filter-chip" onclick="setFilter('status','recurring',this)">🔁 Recurring</button>
-        </div>
-        <div class="filter-group">
-          <span class="filter-label">Priority:</span>
-          <button class="filter-chip active" onclick="setFilter('priority','all',this)">All</button>
-          <button class="filter-chip" onclick="setFilter('priority','high',this)">High</button>
-          <button class="filter-chip" onclick="setFilter('priority','medium',this)">Medium</button>
-          <button class="filter-chip" onclick="setFilter('priority','low',this)">Low</button>
-        </div>
-        <input class="search-input" placeholder="🔍 Search tasks..." oninput="searchTasks(this.value)" />
-      </div>
-
-      <div id="teamTasksContainer"></div>
+  <div class="cards-grid" id="cardsGrid">
+    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-400)">
+      <div style="font-size:36px;margin-bottom:12px">🔌</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Not connected yet</div>
+      <div style="font-size:13px;margin-bottom:20px">Click Setup to connect your Google Apps Script.</div>
+      <button class="btn btn-primary" onclick="openSetup()">⚙ Setup Connection</button>
     </div>
-
-    <!-- MEMBERS OVERVIEW -->
-    <div class="view" id="view-members">
-      <div class="section-header">
-        <div>
-          <div class="section-title">👥 Team Members</div>
-          <div class="section-subtitle">Click on a member to view their tasks</div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ New Task</button>
-      </div>
-      <div class="members-grid" id="membersGrid"></div>
-    </div>
-
-    <!-- MEMBER DETAIL -->
-    <div class="view" id="view-member">
-      <button class="btn btn-ghost btn-sm" onclick="showView('members')" style="margin-bottom:16px">← Back to Team</button>
-      <div id="memberDetailContent"></div>
-    </div>
-
-  </main>
-</div>
-
-<!-- ADD/EDIT TASK MODAL -->
-<div class="modal-overlay" id="taskModal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="taskModalTitle">+ New Task</div>
-      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
-    </div>
-    <form id="taskForm" onsubmit="saveTask(event)">
-      <div class="form-group">
-        <label class="form-label">Task Title *</label>
-        <input class="form-input" id="f-title" placeholder="Briefly describe the task..." required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-textarea" id="f-desc" placeholder="Detail the task, expectations, and what's needed to complete it..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Assigned To</label>
-          <select class="form-select" id="f-assignee">
-            <option value="team">Accounting All (Team)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Due Date</label>
-          <input class="form-input" id="f-due" type="date">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Priority</label>
-          <select class="form-select" id="f-priority">
-            <option value="high">🔴 High</option>
-            <option value="medium" selected>🟡 Medium</option>
-            <option value="low">🟢 Low</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Status</label>
-          <select class="form-select" id="f-status">
-            <option value="open">Open</option>
-            <option value="inprogress">In Progress</option>
-            <option value="done">Done</option>
-            <option value="waiting">On Hold</option>
-            <option value="recurring">🔁 Recurring</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Tags (comma-separated)</label>
-        <input class="form-input" id="f-tags" placeholder="reports, budget, Q1...">
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-ghost" onclick="closeModal('taskModal')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Task</button>
-      </div>
-    </form>
   </div>
-</div>
-
-<!-- TASK DETAIL MODAL -->
-<div class="modal-overlay" id="detailModal">
-  <div class="modal task-detail" id="detailModalContent"></div>
-</div>
+</main>
 
 <!-- SETUP MODAL -->
 <div class="modal-overlay" id="setupModal">
-  <div class="modal setup-modal">
-    <div class="modal-header">
-      <div class="modal-title">⚙ Connect to Google Sheets</div>
-      <button class="modal-close" onclick="closeModal('setupModal')">✕</button>
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">⚙ Manager Hub Setup</div>
+      <button class="modal-close" id="setupClose" onclick="closeSetup()">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px">
-      Connect the dashboard to a shared Google Sheet so all team members see the same data in real time.
-    </p>
-    <div class="setup-steps">
-      <div class="setup-step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">Open Google Apps Script</div>
-          <div class="step-desc">Go to <a href="https://script.google.com" target="_blank" style="color:var(--primary)">script.google.com</a> → click <strong>New project</strong> (top-left)</div>
-        </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">Google Apps Script Web App URL</label>
+        <input class="fi" id="sUrl" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
-      <div class="setup-step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">Paste the script code</div>
-          <div class="step-desc">Click <code>Code.gs</code> on the left → select all (<strong>Ctrl+A</strong>) → delete → paste the full content of the <code>Code.gs</code> file you received → click <strong>💾 Save</strong></div>
-        </div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">Authorize the script (one time)</div>
-          <div class="step-desc">In the function dropdown next to ▶ Run, select <strong>test</strong> → click ▶ <strong>Run</strong> → click <strong>Review permissions → Allow</strong></div>
-        </div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <div class="step-title">Deploy as Web App</div>
-          <div class="step-desc">
-            Click <strong>Deploy → New deployment</strong><br>
-            Click the ⚙ gear icon → choose <strong>Web app</strong><br>
-            <em>Execute as</em>: <strong>Me</strong> &nbsp;|&nbsp; <em>Who has access</em>: <strong>Anyone</strong><br>
-            Click <strong>Deploy</strong>
-          </div>
-        </div>
-      </div>
-      <div class="setup-step">
-        <div class="step-num">5</div>
-        <div class="step-body">
-          <div class="step-title">Copy the Web App URL &amp; paste below</div>
-          <div class="step-desc">Copy the URL ending with <code>/exec</code> and paste it in the field below.</div>
-        </div>
+      <div style="border-top:1px solid var(--gray-100);padding-top:14px;">
+        <p style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">First time? Follow these steps:</p>
+        <div class="setup-step"><div class="step-num">1</div><div><div class="step-t">Open Google Apps Script</div><div class="step-d">Go to <code>script.google.com</code> → New project</div></div></div>
+        <div class="setup-step"><div class="step-num">2</div><div><div class="step-t">Paste Code.gs</div><div class="step-d">Replace all content with the provided <code>Code.gs</code> file → Save</div></div></div>
+        <div class="setup-step"><div class="step-num">3</div><div><div class="step-t">Deploy as Web App</div><div class="step-d">Deploy → New deployment → Web app | Execute as: <strong>Me</strong> | Access: <strong>Anyone</strong></div></div></div>
+        <div class="setup-step"><div class="step-num">4</div><div><div class="step-t">Paste the /exec URL above</div><div class="step-d">Test → Connect.</div></div></div>
       </div>
     </div>
-    <div class="form-group" style="margin-top:8px">
-      <label class="form-label">Web App URL</label>
-      <input class="form-input" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div id="setupMsg" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin:8px 0"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeModal('setupModal')">Cancel</button>
-      <button class="btn btn-ghost" onclick="testConnection()" id="testBtn">🔍 Test Connection</button>
-      <button class="btn btn-primary" onclick="saveScriptUrl()">Connect & Load Data</button>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="testBtn" onclick="testConn()">🔍 Test Connection</button>
+      <button class="btn btn-primary" onclick="saveSetup()">Connect & Load</button>
     </div>
   </div>
 </div>
 
-<!-- LOADING OVERLAY -->
-<div class="loading-overlay hidden" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div style="font-size:14px;font-weight:600;color:var(--gray-600)" id="loadingText">Loading data from Google Sheets...</div>
-</div>
+<div class="loader hidden" id="loader"><div class="spinner"></div><div style="font-size:13px;font-weight:600;color:var(--gray-600)">Loading team data…</div></div>
+<div class="toast" id="toast"></div>
 
 <script>
-const COLORS = ['#2563eb','#7c3aed','#059669'];
-
-const defaultMembers = [
-  { id: 1, name: 'Kim',   role: 'Finance Team',  color: COLORS[0] },
-  { id: 2, name: 'Ronit', role: 'Finance Team',  color: COLORS[1] },
-  { id: 3, name: 'Vicky', role: 'Finance Team',  color: COLORS[2] },
-];
-
-const fmtDate = d => d.toISOString().slice(0,10);
-const daysFromNow = n => { let d = new Date(); d.setDate(d.getDate()+n); return fmtDate(d); };
-
-const defaultTasks = [
-  // TEAM / ACCOUNTING ALL tasks
-  { id:1,  title:'Q1 2026 Financial Close', desc:'Complete the Q1 financial statements including P&L, Balance Sheet, and Cash Flow. Submission to board required by end of month.', assignee:'team', dueDate:daysFromNow(7),  priority:'high',   status:'inprogress', createdAt:fmtDate(new Date()), tags:['Q1','Reporting'], comments:[{id:1,author:'Manager',isManager:true,text:'This is critical – the board is waiting on this. Please prioritize.',ts:'2026-03-20T09:00:00'}] },
-  { id:2,  title:'Annual Budget Revision',  desc:'Update the FY2026 budget based on revised economic assumptions. Please include an optimistic and pessimistic scenario.', assignee:'team', dueDate:daysFromNow(-3), priority:'high',   status:'open',       createdAt:fmtDate(new Date()), tags:['Budget','2026'], comments:[] },
-  { id:3,  title:'Audit Package Preparation', desc:'Consolidate all documents required for the quarterly audit: invoices, bank confirmations, and vendor reports.', assignee:'team', dueDate:daysFromNow(14), priority:'medium', status:'open',       createdAt:fmtDate(new Date()), tags:['Audit'], comments:[] },
-  { id:4,  title:'Procurement Policy Update', desc:'Update procurement policies per management directive. Draft a procedures document and present for approval.', assignee:'team', dueDate:daysFromNow(21), priority:'low',    status:'done',       createdAt:fmtDate(new Date()), tags:['Policy'], comments:[{id:2,author:'Manager',isManager:true,text:'Great work on completing this ahead of schedule!',ts:'2026-03-22T14:00:00'}] },
-  // KIM
-  { id:5,  title:'Bank Reconciliation – March', desc:'Reconcile all bank account balances as of 03/31/2026 against the company books.', assignee:1, dueDate:daysFromNow(8),  priority:'high',   status:'inprogress', createdAt:fmtDate(new Date()), tags:['Banking'], comments:[{id:3,author:'Kim',isManager:false,text:'Started – expecting to finish by end of the week.',ts:'2026-03-23T10:00:00'}] },
-  { id:6,  title:'Vendor Account Reconciliation', desc:'Reconcile major vendor accounts and resolve open discrepancies.', assignee:1, dueDate:daysFromNow(-5), priority:'medium', status:'open',       createdAt:fmtDate(new Date()), tags:['Vendors'], comments:[] },
-  { id:7,  title:'Monthly Expense Report Review', desc:'Review and approve all expense reports submitted for March. Flag any non-compliant items.', assignee:1, dueDate:daysFromNow(4),  priority:'medium', status:'open',       createdAt:fmtDate(new Date()), tags:['Expenses'], comments:[{id:4,author:'Manager',isManager:true,text:'Please escalate any items over $5,000 to me directly.',ts:'2026-03-21T11:00:00'}] },
-  // RONIT
-  { id:8,  title:'Revenue Forecast Model – Q2', desc:'Build an Excel model for Q2 revenue forecasting with adjustable parameters by sales channel.', assignee:2, dueDate:daysFromNow(10), priority:'high',   status:'inprogress', createdAt:fmtDate(new Date()), tags:['Forecast','Excel'], comments:[{id:5,author:'Manager',isManager:true,text:'Please send me a first draft for review by Thursday.',ts:'2026-03-21T11:00:00'},{id:6,author:'Ronit',isManager:false,text:'Done – sent to your email.',ts:'2026-03-23T16:00:00'}] },
-  { id:9,  title:'Budget Variance Analysis', desc:'Identify and analyze material budget variances for Q1 and prepare a summary report.', assignee:2, dueDate:daysFromNow(-1), priority:'high',   status:'done',       createdAt:fmtDate(new Date()), tags:['Budget','Analysis'], comments:[] },
-  { id:10, title:'Intercompany Reconciliation', desc:'Reconcile all intercompany balances with subsidiaries before month-end close.', assignee:2, dueDate:daysFromNow(3),  priority:'high',   status:'open',       createdAt:fmtDate(new Date()), tags:['Intercompany'], comments:[] },
-  // VICKY
-  { id:11, title:'Sales Tax Filing – February', desc:'Prepare and submit the monthly sales tax return for February.', assignee:3, dueDate:daysFromNow(-7), priority:'high',   status:'done',       createdAt:fmtDate(new Date()), tags:['Tax'], comments:[] },
-  { id:12, title:'Pending Vendor Invoices', desc:'Process 18 vendor invoices pending approval and payment.', assignee:3, dueDate:daysFromNow(3),  priority:'medium', status:'open',       createdAt:fmtDate(new Date()), tags:['Vendors'], comments:[{id:7,author:'Manager',isManager:true,text:'Some vendors are complaining about delays – please handle urgently.',ts:'2026-03-22T13:00:00'}] },
-  { id:13, title:'Fixed Assets Register Update', desc:'Update the fixed assets register with all Q1 additions, disposals, and depreciation entries.', assignee:3, dueDate:daysFromNow(-2), priority:'medium', status:'open',       createdAt:fmtDate(new Date()), tags:['Assets'], comments:[{id:8,author:'Vicky',isManager:false,text:'Working on it – found some missing entries from January.',ts:'2026-03-23T08:00:00'}] },
-];
-
+// ─── CONFIG ────────────────────────────────────────────────────────────────
 let SCRIPT_URL = localStorage.getItem('fna_script_url') || '';
+const MEMBERS  = ['Kim', 'Ronit', 'Vicky'];
+let allData    = {}; // { Kim: [...tasks], Ronit: [...], Vicky: [...] }
 
-let state = {
-  members: defaultMembers,
-  tasks:   JSON.parse(localStorage.getItem('fna_tasks_cache')) || defaultTasks,
-  currentView: 'accounting',
-  editingTaskId: null,
-  filters: { status: 'all', priority: 'all', search: '' },
-  layout: 'kanban',
-  currentMemberId: null,
-};
-
-// ===== SYNC STATUS =====
-function setSyncStatus(status, text) {
-  const el = document.getElementById('syncStatus');
-  const txt = document.getElementById('syncText');
-  el.className = 'sync-status ' + status;
-  const labels = { idle:'Not connected', saving:'Saving...', saved:'Saved to Sheets', error:'Save failed — check URL' };
-  txt.textContent = text || labels[status] || status;
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function fmt(d){return d?new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';}
+function isOD(t){if(!t.dueDate||t.status==='done')return false;const n=new Date();n.setHours(0,0,0,0);return new Date(t.dueDate+'T00:00:00')<n;}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+function setSSync(s,txt){
+  const el=document.getElementById('syncEl');
+  const lbl={idle:'Not connected',saving:'Loading…',loaded:'Data loaded',error:'Load failed'};
+  el.className='sync-status '+s;
+  document.getElementById('syncTxt').textContent=txt||lbl[s];
 }
 
-// ===== SHEETS API =====
-let saveTimer = null;
-function save() {
-  // Cache locally immediately (fast)
-  localStorage.setItem('fna_tasks_cache', JSON.stringify(state.tasks));
-  // Debounce remote save by 1.5s
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(pushToSheets, 1500);
-}
-
-async function pushToSheets() {
-  if (!SCRIPT_URL) return;
-  setSyncStatus('saving');
-  try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'saveTasks', tasks: state.tasks }),
-      redirect: 'follow',
-    });
-    const json = await res.json();
-    setSyncStatus(json.success ? 'saved' : 'error');
-    setTimeout(() => setSyncStatus('idle', '✓ Sheets connected'), 3000);
-  } catch (e) {
-    setSyncStatus('error');
-  }
-}
-
-async function loadFromSheets() {
-  if (!SCRIPT_URL) { openSetup(); return; }
-  document.getElementById('loadingOverlay').classList.remove('hidden');
-  document.getElementById('loadingText').textContent = 'Connecting to Google Sheets...';
-  try {
-    const res  = await fetch(SCRIPT_URL + '?t=' + Date.now());
-    const json = await res.json();
-    if (json.success !== undefined) {
-      if (json.tasks && json.tasks.length > 0) {
-        state.tasks = json.tasks;
-        localStorage.setItem('fna_tasks_cache', JSON.stringify(state.tasks));
-      }
-      localStorage.setItem('fna_connected', '1');
-      setSyncStatus('idle', '✓ Sheets connected');
-    } else {
-      throw new Error('Unexpected response');
+// ─── LOAD ALL DATA ─────────────────────────────────────────────────────────
+async function loadAll(){
+  if(!SCRIPT_URL){openSetup();return;}
+  document.getElementById('loader').classList.remove('hidden');
+  setSSync('saving','Loading…');
+  try{
+    const r=await fetch(`${SCRIPT_URL}?employee=all&t=${Date.now()}`);
+    const j=await r.json();
+    if(j.success&&j.all){
+      allData=j.all;
+      setSSync('loaded');
+      setTimeout(()=>setSSync('idle','✓ Connected'),3000);
+      renderCards();
+    }else{
+      setSSync('error');
+      toast('Failed to load data. Check your URL.');
     }
-  } catch (e) {
-    localStorage.removeItem('fna_connected');
-    setSyncStatus('error', '✗ Connection failed');
-    document.getElementById('loadingOverlay').classList.add('hidden');
-    // Open setup modal with error message so user can fix the URL
-    openSetup();
-    setTimeout(() => showSetupMsg('✗ Could not connect with the saved URL. Please check the URL and try again, or follow the steps below to redeploy.', 'err'), 200);
-    return;
-  } finally {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-    renderSidebar(); updateStats(); renderTeamTasks();
-    if (state.currentView === 'members') renderMembersGrid();
+  }catch(e){
+    setSSync('error');
+    toast('Cannot reach the script. Check your URL.');
+  }finally{
+    document.getElementById('loader').classList.add('hidden');
   }
 }
 
-async function refreshFromSheets() {
-  if (!SCRIPT_URL) { openSetup(); return; }
-  await loadFromSheets();
+// ─── RENDER CARDS ──────────────────────────────────────────────────────────
+function renderCards(){
+  const grid=document.getElementById('cardsGrid');
+  grid.innerHTML=MEMBERS.map(name=>buildCard(name,allData[name]||[])).join('');
 }
 
-// ===== SETUP =====
-function openSetup() {
-  document.getElementById('scriptUrlInput').value = SCRIPT_URL;
-  openModal('setupModal');
-}
+function buildCard(name,tasks){
+  const key=name.toLowerCase();
+  const pd  = tasks.filter(t=>isOD(t));
+  const ac  = tasks.filter(t=>!isOD(t)&&t.status!=='done');
+  const dn  = tasks.filter(t=>t.status==='done');
 
-function showSetupMsg(text, type) {
-  const el = document.getElementById('setupMsg');
-  el.style.display = 'block';
-  el.style.background = type === 'ok' ? 'var(--success-light)' : type === 'err' ? 'var(--danger-light)' : 'var(--warning-light)';
-  el.style.color = type === 'ok' ? 'var(--success)' : type === 'err' ? 'var(--danger)' : 'var(--warning)';
-  el.textContent = text;
-}
+  // Top 3 active / past-due tasks for preview
+  const preview=[...pd,...ac].slice(0,3);
 
-async function testConnection() {
-  const url = document.getElementById('scriptUrlInput').value.trim();
-  if (!url) { showSetupMsg('⚠ Please paste your Web App URL first.', 'warn'); return; }
-  const btn = document.getElementById('testBtn');
-  btn.textContent = '⏳ Testing...'; btn.disabled = true;
-  showSetupMsg('Connecting...', 'warn');
-  try {
-    const res  = await fetch(url + '?t=' + Date.now());
-    const json = await res.json();
-    if (json.success !== undefined) {
-      showSetupMsg('✓ Connection successful! The script is working correctly.', 'ok');
-    } else {
-      showSetupMsg('⚠ Got a response but unexpected format. Check the script code.', 'warn');
-    }
-  } catch (e) {
-    showSetupMsg('✗ Could not connect. Make sure: (1) URL ends with /exec, (2) "Who has access" is set to Anyone, (3) you ran the test function to authorize.', 'err');
-  } finally {
-    btn.textContent = '🔍 Test Connection'; btn.disabled = false;
-  }
-}
+  const previewHtml=preview.length
+    ?preview.map(t=>`
+      <div class="preview-item">
+        <div class="preview-dot ${t.priority}"></div>
+        <div class="preview-name">${t.title}</div>
+        ${t.dueDate?`<div class="preview-date${isOD(t)?' red':''}">${fmt(t.dueDate)}</div>`:''}
+      </div>`).join('')
+    :`<div class="preview-empty">No open tasks</div>`;
 
-async function saveScriptUrl() {
-  const url = document.getElementById('scriptUrlInput').value.trim();
-  if (!url) { showSetupMsg('⚠ Please paste your Web App URL.', 'warn'); return; }
-  if (!url.includes('script.google.com') || !url.includes('/exec')) {
-    showSetupMsg('⚠ URL should start with https://script.google.com/... and end with /exec', 'warn');
-    return;
-  }
-  SCRIPT_URL = url;
-  localStorage.setItem('fna_script_url', url);
-  closeModal('setupModal');
-  await loadFromSheets();
-}
-
-// Auto-refresh every 60 seconds
-setInterval(() => { if (SCRIPT_URL) loadFromSheets(); }, 60000);
-
-function isOverdue(task) {
-  if (!task.dueDate || task.status === 'done') return false;
-  return new Date(task.dueDate) < new Date(new Date().toDateString());
-}
-function daysLeft(d) {
-  if (!d) return null;
-  return Math.ceil((new Date(d) - new Date(new Date().toDateString())) / 86400000);
-}
-function fmtDateDisp(d) {
-  if (!d) return '—';
-  const [y,m,day] = d.split('-');
-  return `${m}/${day}/${y}`;
-}
-function getMember(id) { return state.members.find(m => m.id === id); }
-function statusLabel(s) { return {open:'Open',inprogress:'In Progress',done:'Done',overdue:'Past Due',waiting:'On Hold',recurring:'Recurring'}[s]||s; }
-function priorityLabel(p) { return {high:'High',medium:'Medium',low:'Low'}[p]||p; }
-function priorityIcon(p) { return {high:'🔴',medium:'🟡',low:'🟢'}[p]||''; }
-function getTaskStatus(task) { return isOverdue(task) ? 'overdue' : task.status; }
-
-// ===== VIEWS =====
-function showView(view, memberId) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-item,.member-nav').forEach(n => n.classList.remove('active'));
-  state.currentView = view;
-  const el = document.getElementById('view-' + view);
-  if (el) { el.classList.add('active'); el.classList.add('animate-in'); }
-  const navEl = document.getElementById('nav-' + view);
-  if (navEl) navEl.classList.add('active');
-  if (view === 'member' && memberId) {
-    state.currentMemberId = memberId;
-    renderMemberDetail(memberId);
-    const nm = document.getElementById('nav-member-' + memberId);
-    if (nm) nm.classList.add('active');
-  }
-  if (view === 'members')    renderMembersGrid();
-  if (view === 'accounting') { renderTeamTasks(); updateStats(); }
-}
-
-// ===== STATS =====
-function updateStats() {
-  const all = state.tasks;
-  const overdueTasks = all.filter(t => isOverdue(t));
-  const done       = all.filter(t => t.status === 'done');
-  const inprogress = all.filter(t => t.status === 'inprogress' && !isOverdue(t));
-  const open       = all.filter(t => t.status === 'open' && !isOverdue(t));
-  const pct = all.length ? Math.round(done.length / all.length * 100) : 0;
-
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card stat-blue">
-      <div class="stat-icon">📋</div>
-      <div class="stat-body">
-        <div class="stat-value">${all.length}</div>
-        <div class="stat-label">Total Tasks</div>
-        <div class="stat-sub">Open: ${open.length}</div>
-      </div>
-    </div>
-    <div class="stat-card stat-orange">
-      <div class="stat-icon">⚡</div>
-      <div class="stat-body">
-        <div class="stat-value">${inprogress.length}</div>
-        <div class="stat-label">In Progress</div>
-        <div class="stat-sub">of ${all.length - done.length} open</div>
-      </div>
-    </div>
-    <div class="stat-card stat-green">
-      <div class="stat-icon">✅</div>
-      <div class="stat-body">
-        <div class="stat-value">${done.length}</div>
-        <div class="stat-label">Completed</div>
-        <div class="stat-sub">${pct}% completion</div>
-      </div>
-    </div>
-    <div class="stat-card stat-red">
-      <div class="stat-icon">🚨</div>
-      <div class="stat-body">
-        <div class="stat-value">${overdueTasks.length}</div>
-        <div class="stat-label">Past Due</div>
-        <div class="stat-sub">${overdueTasks.length > 0 ? 'Requires immediate attention!' : 'All on track 🎉'}</div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('teamBadge').textContent = inprogress.length + open.length;
-  document.getElementById('notifBadge').textContent = overdueTasks.length;
-  document.getElementById('notifBadge').style.display = overdueTasks.length > 0 ? 'flex' : 'none';
-
-  const banner = document.getElementById('overdueBanner');
-  if (overdueTasks.length > 0) {
-    banner.style.display = 'flex';
-    document.getElementById('overdueTasksList').innerHTML =
-      overdueTasks.map(t => `<span class="overdue-tag" onclick="openTaskDetail(${t.id})">${t.title}</span>`).join('');
-  } else {
-    banner.style.display = 'none';
-  }
-
-  renderSidebar();
-}
-
-function renderSidebar() {
-  document.getElementById('sidebarMembers').innerHTML = state.members.map(m => {
-    const mt = state.tasks.filter(t => t.assignee === m.id);
-    const od = mt.filter(t => isOverdue(t)).length;
-    const openCount = mt.filter(t => t.status !== 'done').length;
-    return `
-      <button class="member-nav ${state.currentMemberId === m.id && state.currentView === 'member' ? 'active' : ''}"
-              id="nav-member-${m.id}" onclick="showView('member', ${m.id})">
-        <div class="member-avatar-sm" style="background:${m.color}">${m.name[0]}</div>
-        <div class="member-info-sm">
-          <div class="name">${m.name}</div>
-          <div class="role">${m.role}</div>
-        </div>
-        ${od > 0
-          ? `<span class="member-task-count" style="color:var(--danger);font-weight:800">⚠ ${od}</span>`
-          : `<span class="member-task-count">${openCount} open</span>`}
-      </button>
-    `;
-  }).join('');
-}
-
-// ===== FILTERS =====
-function getFilteredTasks(assigneeFilter) {
-  let tasks = state.tasks;
-  if (assigneeFilter !== undefined) tasks = tasks.filter(t => t.assignee === assigneeFilter);
-  if (state.filters.status !== 'all') {
-    if (state.filters.status === 'overdue') tasks = tasks.filter(t => isOverdue(t));
-    else if (state.filters.status === 'recurring') tasks = tasks.filter(t => t.status === 'recurring');
-    else tasks = tasks.filter(t => t.status === state.filters.status && !isOverdue(t));
-  }
-  if (state.filters.priority !== 'all') tasks = tasks.filter(t => t.priority === state.filters.priority);
-  if (state.filters.search) {
-    const q = state.filters.search.toLowerCase();
-    tasks = tasks.filter(t => t.title.toLowerCase().includes(q) || (t.desc||'').toLowerCase().includes(q));
-  }
-  return tasks;
-}
-
-// ===== RENDER TEAM TASKS =====
-function renderTeamTasks() {
-  const teamTasks   = getFilteredTasks('team');
-  const memberTasks = state.members.flatMap(m => getFilteredTasks(m.id).map(t => ({...t, _member: m})));
-  const container   = document.getElementById('teamTasksContainer');
-  container.innerHTML = state.layout === 'kanban'
-    ? renderKanban([...teamTasks, ...memberTasks])
-    : renderList([...teamTasks, ...memberTasks]);
-  updateStats();
-}
-
-function renderKanban(allTasks) {
-  const statuses = [
-    { key:'open',       label:'Open',        emoji:'⭕' },
-    { key:'inprogress', label:'In Progress', emoji:'🔄' },
-    { key:'recurring',  label:'Recurring',   emoji:'🔁' },
-    { key:'overdue',    label:'Past Due',    emoji:'🚨' },
-    { key:'done',       label:'Done',        emoji:'✅' },
-  ];
-  const cols = statuses.map(s => {
-    let tasks;
-    if (s.key === 'overdue') tasks = allTasks.filter(t => isOverdue(t));
-    else if (s.key === 'done') tasks = allTasks.filter(t => t.status === 'done');
-    else tasks = allTasks.filter(t => t.status === s.key && !isOverdue(t));
-    return `
-      <div class="kanban-col">
-        <div class="kanban-col-header ${s.key}">
-          <span class="col-title ${s.key}">${s.emoji} ${s.label}</span>
-          <span class="col-count ${s.key}">${tasks.length}</span>
-        </div>
-        ${tasks.length === 0
-          ? `<div class="empty-state"><div class="empty-icon">${s.emoji}</div><p>No tasks</p></div>`
-          : tasks.map(t => renderTaskCard(t)).join('')}
-      </div>
-    `;
-  }).join('');
-  return `<div class="kanban-board">${cols}</div>`;
-}
-
-function renderTaskCard(task) {
-  const member  = task.assignee !== 'team' ? getMember(task.assignee) : null;
-  const overdue = isOverdue(task);
-  const days    = daysLeft(task.dueDate);
-  let dueClass = 'on-time', dueText = fmtDateDisp(task.dueDate);
-  if (overdue) { dueClass = 'overdue'; dueText = `⚠ ${Math.abs(days)}d overdue`; }
-  else if (days !== null && days <= 3) { dueClass = 'near'; dueText = days === 0 ? 'Today!' : `${days}d left`; }
-  else if (days !== null) { dueText = `${days}d left`; }
-  const tagsHtml = (task.tags||[]).map(tag => `<span class="tag">${tag}</span>`).join('');
-  const assigneeHtml = member
-    ? `<div class="assignee-chip"><div class="assignee-dot" style="background:${member.color}">${member.name[0]}</div>${member.name}</div>`
-    : `<div class="assignee-chip">👥 Team</div>`;
   return `
-    <div class="task-card ${overdue?'overdue':''} ${task.status==='done'?'done-card':''} priority-${task.priority}" onclick="openTaskDetail(${task.id})">
-      ${overdue ? `<div class="task-card-overdue-banner">🚨 PAST DUE — ${Math.abs(days)} days</div>` : ''}
-      <div class="task-card-title">${task.title}</div>
-      ${task.desc ? `<div class="task-card-desc">${task.desc}</div>` : ''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">${tagsHtml}</div>
-      <div class="task-card-meta">
-        <span class="priority-badge ${task.priority}">${priorityIcon(task.priority)} ${priorityLabel(task.priority)}</span>
-        ${task.dueDate ? `<span class="due-badge ${dueClass}">📅 ${dueText}</span>` : ''}
-        ${task.comments?.length ? `<span class="comment-count">💬 ${task.comments.length}</span>` : ''}
-        ${assigneeHtml}
-      </div>
-    </div>
-  `;
-}
-
-function renderList(tasks) {
-  if (!tasks.length) return `<div class="empty-state"><div class="empty-icon">📭</div><p>No tasks to display</p></div>`;
-  return `<div class="task-list">${tasks.map(t => renderListItem(t)).join('')}</div>`;
-}
-
-function renderListItem(task) {
-  const member  = task.assignee !== 'team' ? getMember(task.assignee) : null;
-  const overdue = isOverdue(task);
-  const status  = overdue ? 'overdue' : task.status;
-  const days    = daysLeft(task.dueDate);
-  const icon    = {open:'',inprogress:'→',done:'✓',overdue:'!'}[status]||'';
-  return `
-    <div class="task-list-item ${status}" onclick="openTaskDetail(${task.id})">
-      <div class="task-status-circle ${status}">${icon}</div>
-      <div class="task-list-body">
-        <div class="task-list-title">${task.title}</div>
-        <div class="task-list-sub">
-          ${member ? `<span>${member.name}</span>` : '<span>👥 Team</span>'}
-          ${task.dueDate ? `<span>📅 ${overdue ? `<span style="color:var(--danger);font-weight:700">⚠ ${Math.abs(days)}d overdue</span>` : fmtDateDisp(task.dueDate)}</span>` : ''}
-          ${task.comments?.length ? `<span>💬 ${task.comments.length}</span>` : ''}
-        </div>
-      </div>
-      <div class="task-list-actions">
-        <span class="priority-badge ${task.priority}">${priorityIcon(task.priority)}</span>
-        <span class="status-badge ${status}">${statusLabel(status)}</span>
-      </div>
-    </div>
-  `;
-}
-
-// ===== MEMBERS GRID =====
-function renderMembersGrid() {
-  document.getElementById('membersGrid').innerHTML = state.members.map(m => {
-    const mt  = state.tasks.filter(t => t.assignee === m.id);
-    const done = mt.filter(t => t.status === 'done').length;
-    const od   = mt.filter(t => isOverdue(t)).length;
-    const ip   = mt.filter(t => t.status === 'inprogress' && !isOverdue(t)).length;
-    const op   = mt.filter(t => t.status === 'open' && !isOverdue(t)).length;
-    const pct  = mt.length ? Math.round(done / mt.length * 100) : 0;
-    const barColor = od > 0 ? 'var(--danger)' : pct >= 70 ? 'var(--success)' : 'var(--primary)';
-    return `
-      <div class="member-card" onclick="showView('member', ${m.id})">
-        <div class="member-card-header">
-          <div style="width:44px;height:44px;border-radius:50%;background:${m.color};display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff">${m.name[0]}</div>
-          <div class="member-card-info">
-            <div class="name">${m.name}</div>
-            <div class="role">${m.role}</div>
+    <div class="emp-card">
+      <div class="card-banner ${key}"></div>
+      <div class="card-inner">
+        <div class="card-head">
+          <div class="avatar ${key}">${name[0]}</div>
+          <div>
+            <div class="card-name">${name}</div>
+            <div class="card-role">Finance Team</div>
           </div>
-          ${od > 0 ? `<span style="margin-left:auto;background:var(--danger-light);color:var(--danger);font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px">⚠ ${od} past due</span>` : ''}
         </div>
-        <div class="member-card-stats">
-          <div class="member-mini-stat"><div class="v" style="color:var(--gray-600)">${op}</div><div class="l">Open</div></div>
-          <div class="member-mini-stat"><div class="v" style="color:var(--warning)">${ip}</div><div class="l">In Progress</div></div>
-          <div class="member-mini-stat"><div class="v" style="color:var(--success)">${done}</div><div class="l">Done</div></div>
-          <div class="member-mini-stat"><div class="v" style="color:var(--danger)">${od}</div><div class="l">Past Due</div></div>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar-label"><span>Completion</span><span style="color:${barColor}">${pct}%</span></div>
-          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
 
-// ===== MEMBER DETAIL =====
-function renderMemberDetail(memberId) {
-  const m  = getMember(memberId);
-  if (!m) return;
-  const mt   = state.tasks.filter(t => t.assignee === memberId);
-  const done = mt.filter(t => t.status === 'done').length;
-  const od   = mt.filter(t => isOverdue(t)).length;
-  const ip   = mt.filter(t => t.status === 'inprogress' && !isOverdue(t)).length;
-  const pct  = mt.length ? Math.round(done / mt.length * 100) : 0;
-  const odBanner = od > 0 ? `
-    <div class="overdue-banner" style="margin-bottom:16px">
-      <div class="overdue-banner-icon">🚨</div>
-      <div class="overdue-banner-text">
-        <h3>${od} Past Due Task${od > 1 ? 's' : ''}</h3>
-        <div class="overdue-tasks-list">
-          ${mt.filter(t => isOverdue(t)).map(t => `<span class="overdue-tag" onclick="openTaskDetail(${t.id})">${t.title}</span>`).join('')}
-        </div>
-      </div>
-    </div>` : '';
-
-  document.getElementById('memberDetailContent').innerHTML = `
-    <div class="member-view-header">
-      <div class="member-avatar-lg" style="background:${m.color}">${m.name[0]}</div>
-      <div class="member-header-info">
-        <h2>${m.name}</h2>
-        <p>${m.role}</p>
-        <div class="progress-bar-wrap" style="max-width:280px;margin-top:10px">
-          <div class="progress-bar-label"><span>Task Completion</span><span style="color:var(--primary)">${pct}%</span></div>
-          <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:var(--primary)"></div></div>
-        </div>
-      </div>
-      <div class="member-stats">
-        <div class="member-stat"><div class="val" style="color:var(--gray-700)">${mt.length}</div><div class="lbl">Total</div></div>
-        <div class="member-stat"><div class="val" style="color:var(--warning)">${ip}</div><div class="lbl">In Progress</div></div>
-        <div class="member-stat"><div class="val" style="color:var(--success)">${done}</div><div class="lbl">Done</div></div>
-        <div class="member-stat"><div class="val" style="color:var(--danger)">${od}</div><div class="lbl">Past Due</div></div>
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="openAddTask(${memberId})" style="align-self:flex-start">+ Add Task</button>
-    </div>
-    ${odBanner}
-    <div class="section-header"><div class="section-title">${m.name}'s Tasks</div></div>
-    ${mt.length === 0
-      ? `<div class="empty-state"><div class="empty-icon">🎉</div><p>No tasks assigned</p></div>`
-      : `<div class="task-list">${mt.map(t => renderListItem(t)).join('')}</div>`}
-  `;
-}
-
-// ===== TASK DETAIL =====
-function openTaskDetail(taskId) {
-  const task = state.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  const member  = task.assignee !== 'team' ? getMember(task.assignee) : null;
-  const overdue = isOverdue(task);
-  const days    = daysLeft(task.dueDate);
-  const status  = overdue ? 'overdue' : task.status;
-  const tagsHtml = (task.tags||[]).map(tag => `<span class="tag">${tag}</span>`).join('');
-  const commentsHtml = (task.comments||[]).map(c => {
-    const cm = state.members.find(m => m.name === c.author);
-    const col = c.isManager ? '#2563eb' : (cm ? cm.color : '#6b7280');
-    return `
-      <div class="comment-item">
-        <div class="comment-avatar" style="background:${col}">${c.author[0]}</div>
-        <div class="comment-bubble ${c.isManager ? 'manager-comment' : ''}">
-          <div class="comment-header">
-            <span class="comment-author ${c.isManager ? 'manager' : ''}">${c.author}</span>
-            ${c.isManager ? '<span class="comment-manager-tag">Manager</span>' : ''}
-            <span class="comment-time">${formatTime(c.ts)}</span>
+        <div class="stats-row">
+          <div class="stat-box total">
+            <div class="stat-num">${tasks.length}</div>
+            <div class="stat-lbl">Total</div>
           </div>
-          <div class="comment-text">${c.text}</div>
+          <div class="stat-box pastdue">
+            <div class="stat-num">${pd.length}</div>
+            <div class="stat-lbl">Past Due</div>
+          </div>
+          <div class="stat-box active">
+            <div class="stat-num">${ac.length}</div>
+            <div class="stat-lbl">Active</div>
+          </div>
+          <div class="stat-box done">
+            <div class="stat-num">${dn.length}</div>
+            <div class="stat-lbl">Done</div>
+          </div>
         </div>
+
+        <div class="preview-title">Open Tasks</div>
+        <div style="margin-bottom:16px">${previewHtml}</div>
+
+        <a href="employee.html?employee=${name}" target="_blank" style="text-decoration:none">
+          <button class="btn btn-primary btn-full">Open ${name}'s Dashboard →</button>
+        </a>
       </div>
-    `;
-  }).join('');
-
-  document.getElementById('detailModalContent').innerHTML = `
-    <div class="modal-header">
-      <div style="flex:1">
-        <div class="task-detail-badges">
-          <span class="status-badge ${status}">${statusLabel(status)}</span>
-          <span class="priority-badge ${task.priority}">${priorityIcon(task.priority)} ${priorityLabel(task.priority)}</span>
-          ${overdue ? `<span style="background:var(--danger-light);color:var(--danger);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🚨 ${Math.abs(days)} days past due</span>` : ''}
-          ${tagsHtml}
-        </div>
-        <div class="task-detail-title">${task.title}</div>
-        <div class="task-detail-meta">
-          <span>📅 ${task.dueDate ? fmtDateDisp(task.dueDate) : 'No due date'}</span>
-          ${member ? `<span><div style="width:16px;height:16px;border-radius:50%;background:${member.color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700">${member.name[0]}</div> ${member.name}</span>` : '<span>👥 Accounting All (Team)</span>'}
-          <span>💬 ${(task.comments||[]).length} comments</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:flex-start">
-        <button class="btn btn-ghost btn-sm" onclick="openEditTask(${task.id})">✏ Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteTask(${task.id})">🗑</button>
-        <button class="modal-close" onclick="closeModal('detailModal')">✕</button>
-      </div>
-    </div>
-    <div style="margin-bottom:20px">
-      ${task.desc ? `<div class="detail-section-title">📄 Description</div><div class="task-desc-box">${task.desc}</div>` : ''}
-      <div style="margin-top:16px">
-        <div class="detail-section-title">📌 Update Status</div>
-        <div class="status-changer">
-          <button class="status-btn open ${task.status==='open'?'selected':''}" onclick="updateStatus(${task.id},'open',this)">⭕ Open</button>
-          <button class="status-btn inprogress ${task.status==='inprogress'?'selected':''}" onclick="updateStatus(${task.id},'inprogress',this)">🔄 In Progress</button>
-          <button class="status-btn recurring ${task.status==='recurring'?'selected':''}" onclick="updateStatus(${task.id},'recurring',this)">🔁 Recurring</button>
-          <button class="status-btn done ${task.status==='done'?'selected':''}" onclick="updateStatus(${task.id},'done',this)">✅ Done</button>
-        </div>
-      </div>
-    </div>
-    <div class="comments-section">
-      <div class="detail-section-title">💬 Comments & Updates</div>
-      <div class="comments-list" id="commentsList-${task.id}">
-        ${commentsHtml || '<div style="text-align:center;padding:16px;color:var(--gray-400);font-size:13px">No comments yet</div>'}
-      </div>
-      <div class="comment-input-wrap">
-        <textarea id="commentInput-${task.id}" placeholder="Write a comment, progress update, or instruction..." onkeydown="if(event.ctrlKey&&event.key==='Enter')addComment(${task.id},true)"></textarea>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <button class="btn btn-primary btn-sm" onclick="addComment(${task.id}, true)">Send (Manager)</button>
-          <button class="btn btn-ghost btn-sm" onclick="addComment(${task.id}, false)">Send (Team)</button>
-        </div>
-      </div>
-    </div>
-  `;
-  openModal('detailModal');
+    </div>`;
 }
 
-function addComment(taskId, isManager) {
-  const input = document.getElementById(`commentInput-${taskId}`);
-  const text  = input.value.trim();
-  if (!text) return;
-  const task   = state.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  if (!task.comments) task.comments = [];
-  const member = task.assignee !== 'team' ? getMember(task.assignee) : null;
-  const author = isManager ? 'Manager' : (member ? member.name : 'Team Member');
-  task.comments.push({ id: Date.now(), author, isManager, text, ts: new Date().toISOString() });
-  save(); input.value = '';
-  openTaskDetail(taskId);
+// ─── SETUP ─────────────────────────────────────────────────────────────────
+function openSetup(){
+  document.getElementById('sUrl').value=SCRIPT_URL;
+  document.getElementById('setupClose').style.display=SCRIPT_URL?'':'none';
+  document.getElementById('setupModal').classList.add('open');
+}
+function closeSetup(){document.getElementById('setupModal').classList.remove('open');}
+
+async function testConn(){
+  const url=document.getElementById('sUrl').value.trim();
+  if(!url){toast('Enter a URL first');return;}
+  const btn=document.getElementById('testBtn');
+  btn.textContent='⏳ Testing…';btn.disabled=true;
+  try{
+    const r=await fetch(`${url}?employee=Kim&t=${Date.now()}`);
+    const j=await r.json();
+    btn.textContent=j.success?'✅ Connected!':'❌ Script error';
+    btn.style.color=j.success?'var(--success)':'var(--danger)';
+  }catch{btn.textContent='❌ Failed';btn.style.color='var(--danger)';}
+  setTimeout(()=>{btn.textContent='🔍 Test Connection';btn.style.color='';btn.disabled=false;},3000);
 }
 
-function updateStatus(taskId, newStatus, btn) {
-  const task = state.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  task.status = newStatus; save();
-  btn.closest('.status-changer').querySelectorAll('.status-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  const statusEl = document.querySelector('#detailModalContent .status-badge');
-  if (statusEl) { statusEl.className = `status-badge ${newStatus}`; statusEl.textContent = statusLabel(newStatus); }
-  renderTeamTasks();
-  if (state.currentView === 'member') renderMemberDetail(state.currentMemberId);
-  if (state.currentView === 'members') renderMembersGrid();
-  renderSidebar();
+async function saveSetup(){
+  const url=document.getElementById('sUrl').value.trim();
+  if(!url){toast('Please enter the script URL');return;}
+  SCRIPT_URL=url;
+  localStorage.setItem('fna_script_url',url);
+  closeSetup();
+  await loadAll();
 }
 
-function deleteTask(taskId) {
-  if (!confirm('Are you sure you want to delete this task?')) return;
-  state.tasks = state.tasks.filter(t => t.id !== taskId); save();
-  closeModal('detailModal');
-  renderTeamTasks();
-  if (state.currentView === 'member') renderMemberDetail(state.currentMemberId);
-  if (state.currentView === 'members') renderMembersGrid();
-  renderSidebar();
-}
+// ─── AUTO-REFRESH ──────────────────────────────────────────────────────────
+setInterval(()=>{if(SCRIPT_URL)loadAll();},60000);
 
-function formatTime(ts) {
-  if (!ts) return '';
-  const d = new Date(ts);
-  return `${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-}
-
-// ===== ADD / EDIT TASK =====
-function openAddTask(memberId) {
-  state.editingTaskId = null;
-  document.getElementById('taskModalTitle').textContent = '+ New Task';
-  document.getElementById('taskForm').reset();
-  document.getElementById('f-due').value = daysFromNow(7);
-  const sel = document.getElementById('f-assignee');
-  sel.innerHTML = `<option value="team">👥 Accounting All (Team)</option>` +
-    state.members.map(m => `<option value="${m.id}" ${memberId===m.id?'selected':''}>${m.name}</option>`).join('');
-  openModal('taskModal');
-}
-
-function openEditTask(taskId) {
-  const task = state.tasks.find(t => t.id === taskId);
-  if (!task) return;
-  state.editingTaskId = taskId;
-  document.getElementById('taskModalTitle').textContent = '✏ Edit Task';
-  const sel = document.getElementById('f-assignee');
-  sel.innerHTML = `<option value="team">👥 Accounting All (Team)</option>` +
-    state.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  document.getElementById('f-title').value    = task.title;
-  document.getElementById('f-desc').value     = task.desc || '';
-  document.getElementById('f-assignee').value = task.assignee;
-  document.getElementById('f-due').value      = task.dueDate || '';
-  document.getElementById('f-priority').value = task.priority;
-  document.getElementById('f-status').value   = task.status;
-  document.getElementById('f-tags').value     = (task.tags||[]).join(', ');
-  closeModal('detailModal'); openModal('taskModal');
-}
-
-function saveTask(e) {
-  e.preventDefault();
-  const av = document.getElementById('f-assignee').value;
-  const data = {
-    title:    document.getElementById('f-title').value.trim(),
-    desc:     document.getElementById('f-desc').value.trim(),
-    assignee: av === 'team' ? 'team' : parseInt(av),
-    dueDate:  document.getElementById('f-due').value,
-    priority: document.getElementById('f-priority').value,
-    status:   document.getElementById('f-status').value,
-    tags:     document.getElementById('f-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
-  };
-  if (state.editingTaskId) {
-    const t = state.tasks.find(t => t.id === state.editingTaskId);
-    if (t) Object.assign(t, data);
-  } else {
-    state.tasks.push({ ...data, id: Date.now(), createdAt: new Date().toISOString(), comments: [] });
-  }
-  save(); closeModal('taskModal');
-  renderTeamTasks();
-  if (state.currentView === 'member') renderMemberDetail(state.currentMemberId);
-  if (state.currentView === 'members') renderMembersGrid();
-  renderSidebar();
-}
-
-// ===== FILTERS & LAYOUT =====
-function setFilter(type, value, btn) {
-  state.filters[type] = value;
-  btn.closest('.filter-group').querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  btn.classList.add('active');
-  renderTeamTasks();
-}
-function searchTasks(q) { state.filters.search = q; renderTeamTasks(); }
-function setLayout(layout) {
-  state.layout = layout;
-  document.getElementById('kanbanToggle').classList.toggle('active', layout==='kanban');
-  document.getElementById('listToggle').classList.toggle('active', layout==='list');
-  renderTeamTasks();
-}
-
-// ===== MODALS =====
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => {
-  if (e.target === o && o.id !== 'setupModal') closeModal(o.id);
-}));
-
-// ===== EXPORT =====
-function exportData() {
-  const blob = new Blob([JSON.stringify({members:state.members,tasks:state.tasks,exported:new Date().toISOString()},null,2)],{type:'application/json'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = `finance-na-dashboard-${fmtDate(new Date())}.json`; a.click();
-}
-
-// ===== INIT =====
-renderSidebar(); updateStats(); renderTeamTasks();
-// Always try to load — loadFromSheets() will open Setup modal automatically on failure
-if (SCRIPT_URL) {
-  loadFromSheets();
-} else {
-  openSetup();
-}
+// ─── INIT ──────────────────────────────────────────────────────────────────
+(function init(){
+  if(SCRIPT_URL){setSSync('idle','✓ Connected');loadAll();}
+  else openSetup();
+})();
 </script>
 </body>
 </html>
