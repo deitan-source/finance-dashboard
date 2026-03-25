@@ -5,340 +5,615 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finance North America — Manager Hub</title>
 <style>
-:root{
-  --primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;
-  --success:#059669;--success-light:#d1fae5;
-  --warning:#d97706;--warning-light:#fef3c7;
-  --danger:#dc2626;--danger-light:#fee2e2;
-  --purple:#7c3aed;--purple-light:#ede9fe;
-  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;
-  --gray-300:#d1d5db;--gray-400:#9ca3af;--gray-500:#6b7280;
-  --gray-600:#4b5563;--gray-700:#374151;--gray-800:#1f2937;
-  --radius:14px;
-  --shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:0 4px 6px -1px rgba(0,0,0,.1);
-  --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',Arial,sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;font-size:14px;}
+  :root {
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --success: #059669;
+    --success-light: #d1fae5;
+    --warning: #d97706;
+    --warning-light: #fef3c7;
+    --danger: #dc2626;
+    --danger-light: #fee2e2;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius: 12px;
+    --radius-sm: 7px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+    --shadow-lg: 0 12px 28px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
+    --transition: 0.18s ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-800);
+    min-height: 100vh;
+  }
 
-/* HEADER */
-header{height:64px;background:#fff;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);}
-.header-left{display:flex;align-items:center;gap:14px;}
-.brand-icon{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-.brand-text h1{font-size:17px;font-weight:800;}
-.brand-text p{font-size:11px;color:var(--gray-500);}
-.mgr-pill{background:var(--purple-light);color:var(--purple);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;}
-.header-right{display:flex;align-items:center;gap:10px;}
+  /* ── HEADER ── */
+  .header {
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 28px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 0 var(--gray-100);
+  }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 17px; flex-shrink: 0;
+  }
+  .brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .brand-title    { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+  .brand-subtitle { font-size: 11px; color: var(--gray-500); }
+  .header-sep { width: 1px; height: 28px; background: var(--gray-200); flex-shrink: 0; }
+  .header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .sync-pill {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+    transition: var(--transition);
+  }
+  .sync-pill.idle    { background: var(--gray-100);    color: var(--gray-500); }
+  .sync-pill.loading { background: var(--warning-light); color: var(--warning); }
+  .sync-pill.ok      { background: var(--success-light); color: var(--success); }
+  .sync-pill.error   { background: var(--danger-light);  color: var(--danger); }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .sync-pill.loading .sync-dot { animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-/* BUTTONS */
-.btn{border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;padding:8px 16px;transition:all .2s;display:inline-flex;align-items:center;gap:6px;font-family:inherit;}
-.btn-primary{background:var(--primary);color:#fff;} .btn-primary:hover{background:var(--primary-dark);}
-.btn-ghost{background:var(--gray-100);color:var(--gray-700);} .btn-ghost:hover{background:var(--gray-200);}
-.btn-sm{padding:6px 12px;font-size:12px;}
-.btn-full{width:100%;justify-content:center;margin-top:4px;}
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    font-size: 13px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: var(--transition); line-height: 1;
+  }
+  .btn:focus { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-ghost { background: transparent; color: var(--gray-600); border: 1px solid var(--gray-200); }
+  .btn-ghost:hover { background: var(--gray-100); border-color: var(--gray-300); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-/* SYNC */
-.sync-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;transition:all .3s;}
-.sync-status.idle  {color:var(--gray-400);background:var(--gray-100);}
-.sync-status.saving{color:var(--warning);background:var(--warning-light);}
-.sync-status.loaded{color:var(--success);background:var(--success-light);}
-.sync-status.error {color:var(--danger);background:var(--danger-light);}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
-@keyframes spin-ring{to{transform:rotate(360deg);}}
+  /* ── MAIN ── */
+  .main { max-width: 1060px; margin: 0 auto; padding: 28px 20px; }
 
-/* MAIN */
-main{max-width:1100px;margin:0 auto;padding:36px 24px;}
-.page-title{font-size:22px;font-weight:800;margin-bottom:6px;}
-.page-sub  {font-size:14px;color:var(--gray-500);margin-bottom:32px;}
+  /* ── PAGE HERO ── */
+  .page-hero { margin-bottom: 28px; }
+  .page-title { font-size: 22px; font-weight: 800; color: var(--gray-900); margin-bottom: 4px; }
+  .page-sub   { font-size: 14px; color: var(--gray-500); }
 
-/* EMPLOYEE CARDS GRID */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+  /* ── EMPLOYEE GRID ── */
+  .employee-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .employee-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 580px) { .employee-grid { grid-template-columns: 1fr; } }
 
-/* EMPLOYEE CARD */
-.emp-card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:box-shadow .2s;}
-.emp-card:hover{box-shadow:var(--shadow-md);}
-.card-banner{height:8px;}
-.card-banner.kim   {background:linear-gradient(90deg,#2563eb,#7c3aed);}
-.card-banner.ronit {background:linear-gradient(90deg,#059669,#2563eb);}
-.card-banner.vicky {background:linear-gradient(90deg,#d97706,#dc2626);}
-.card-inner{padding:22px;}
-.card-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
-.avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}
-.avatar.kim   {background:linear-gradient(135deg,#2563eb,#7c3aed);}
-.avatar.ronit {background:linear-gradient(135deg,#059669,#2563eb);}
-.avatar.vicky {background:linear-gradient(135deg,#d97706,#dc2626);}
-.card-name{font-size:18px;font-weight:800;}
-.card-role{font-size:12px;color:var(--gray-500);}
-.card-loading{color:var(--gray-400);font-size:13px;text-align:center;padding:16px 0;}
+  /* ── EMPLOYEE CARD ── */
+  .emp-card {
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow var(--transition), transform var(--transition);
+    display: flex; flex-direction: column;
+  }
+  .emp-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-3px);
+  }
+  .card-top { padding: 22px 20px 16px; }
+  .avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+  .avatar-kim   { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+  .avatar-ronit { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+  .avatar-vicky { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .emp-name { font-size: 20px; font-weight: 800; color: var(--gray-900); }
 
-/* STATS ROW */
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:18px;}
-.stat-box{background:var(--gray-50);border-radius:10px;padding:12px 10px;text-align:center;border:1.5px solid var(--gray-100);}
-.stat-num{font-size:22px;font-weight:800;line-height:1;}
-.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--gray-500);margin-top:4px;}
-.stat-box.total  .stat-num{color:var(--gray-700);}
-.stat-box.pastdue .stat-num{color:var(--danger);}  .stat-box.pastdue{background:var(--danger-light);border-color:#fca5a5;}
-.stat-box.active .stat-num{color:var(--primary);} .stat-box.active{background:var(--primary-light);border-color:#93c5fd;}
-.stat-box.done   .stat-num{color:var(--success);} .stat-box.done  {background:var(--success-light);border-color:#6ee7b7;}
+  /* accent strip on left */
+  .emp-card-kim   { border-left: 3px solid var(--primary); }
+  .emp-card-ronit { border-left: 3px solid var(--purple); }
+  .emp-card-vicky { border-left: 3px solid var(--teal); }
 
-/* TASK PREVIEW */
-.preview-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--gray-500);margin-bottom:8px;}
-.preview-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gray-100);}
-.preview-item:last-child{border-bottom:none;}
-.preview-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.preview-dot.high  {background:var(--danger);}
-.preview-dot.medium{background:var(--warning);}
-.preview-dot.low   {background:var(--success);}
-.preview-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.preview-date{font-size:11px;color:var(--gray-400);flex-shrink:0;}
-.preview-date.red{color:var(--danger);font-weight:700;}
-.preview-empty{font-size:12px;color:var(--gray-400);text-align:center;padding:10px 0;}
+  /* ── STATS ── */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 8px; margin-bottom: 14px;
+  }
+  .stat-box {
+    background: var(--gray-50); border: 1px solid var(--gray-100);
+    border-radius: 8px; padding: 10px 8px; text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 800; line-height: 1; margin-bottom: 3px; }
+  .stat-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: var(--gray-400); }
+  .stat-total    .stat-num { color: var(--gray-700); }
+  .stat-pastdue  .stat-num { color: var(--danger); }
+  .stat-progress .stat-num { color: var(--primary); }
+  .stat-done     .stat-num { color: var(--success); }
 
-/* SETUP STEPS */
-.setup-step{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray-100);} .setup-step:last-child{border-bottom:none;}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
-.step-t{font-size:13px;font-weight:700;margin-bottom:2px;}
-.step-d{font-size:12px;color:var(--gray-500);line-height:1.55;}
-.step-d code{background:var(--gray-100);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px;}
+  /* ── MINI BAR ── */
+  .mini-bar { display: flex; gap: 4px; margin-bottom: 16px; align-items: center; }
+  .bar-seg {
+    height: 5px; border-radius: 3px; min-width: 4px;
+    transition: width 0.4s ease;
+  }
+  .bar-pastdue  { background: var(--danger); }
+  .bar-progress { background: var(--primary); }
+  .bar-done     { background: var(--success); }
+  .bar-empty    { background: var(--gray-200); flex: 1; }
 
-/* MODALS */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.open{display:flex;}
-.modal{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-lg);width:100%;max-width:500px;max-height:92vh;overflow-y:auto;}
-.modal-hdr{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
-.modal-title{font-size:17px;font-weight:800;}
-.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--gray-400);padding:4px 8px;border-radius:6px;} .modal-close:hover{background:var(--gray-100);}
-.modal-body{padding:20px 24px;}
-.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 24px;border-top:1px solid var(--gray-100);}
-.fg{margin-bottom:16px;}
-.fl{display:block;font-size:11px;font-weight:700;color:var(--gray-500);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;}
-.fi{width:100%;border:1.5px solid var(--gray-200);border-radius:8px;padding:10px 12px;font-size:14px;font-family:inherit;transition:border-color .2s;}
-.fi:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light);}
+  /* ── PAST DUE BANNER ── */
+  .pastdue-banner {
+    background: var(--danger-light); color: var(--danger);
+    padding: 8px 14px; font-size: 12px; font-weight: 700;
+    border-top: 1px solid #fca5a5;
+    display: flex; align-items: center; gap: 6px;
+  }
 
-/* LOADER / TOAST */
-.loader{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
-.loader.hidden{display:none;}
-.spinner{width:38px;height:38px;border:4px solid var(--gray-200);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gray-800);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:3000;opacity:0;transition:opacity .3s;pointer-events:none;}
-.toast.show{opacity:1;}
+  /* ── OPEN BTN ── */
+  .card-footer-area { padding: 14px 20px 18px; margin-top: auto; }
+  .open-btn {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 10px 14px;
+    border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; border: none; text-decoration: none;
+    transition: var(--transition);
+  }
+  .emp-card-kim   .open-btn { background: var(--primary-light); color: var(--primary); }
+  .emp-card-kim   .open-btn:hover { background: #bfdbfe; }
+  .emp-card-ronit .open-btn { background: var(--purple-light); color: var(--purple); }
+  .emp-card-ronit .open-btn:hover { background: #ddd6fe; }
+  .emp-card-vicky .open-btn { background: var(--teal-light); color: var(--teal); }
+  .emp-card-vicky .open-btn:hover { background: #99f6e4; }
+  .open-arrow { font-size: 16px; }
 
-@media(max-width:700px){
-  .cards-grid{grid-template-columns:1fr;}
-  .stats-row{grid-template-columns:1fr 1fr;}
-  header{padding:0 16px;}
-}
+  /* ── LOADING STATE ── */
+  .stat-num.loading { color: var(--gray-300); }
+  .loading-pulse { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── MODALS ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: #fff; border-radius: 14px;
+    width: 100%; max-width: 480px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    transform: scale(0.96) translateY(4px);
+    transition: transform 0.2s ease;
+  }
+  .modal-backdrop.open .modal { transform: scale(1) translateY(0); }
+  .modal-header {
+    padding: 18px 20px 14px; border-bottom: 1px solid var(--gray-100);
+    display: flex; align-items: center; gap: 10px;
+    position: sticky; top: 0; background: #fff; z-index: 1;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; flex: 1; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--gray-400); font-size: 20px;
+    padding: 2px 6px; border-radius: 4px; line-height: 1;
+  }
+  .modal-close:hover { background: var(--gray-100); color: var(--gray-700); }
+  .modal-body { padding: 18px 20px; }
+  .modal-footer {
+    padding: 14px 20px; border-top: 1px solid var(--gray-100);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .spacer { flex: 1; }
+
+  /* ── FORM ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block; font-size: 11px; font-weight: 700;
+    color: var(--gray-500); margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .form-input {
+    width: 100%; padding: 8px 11px;
+    border: 1px solid var(--gray-300); border-radius: var(--radius-sm);
+    font-size: 14px; color: var(--gray-800);
+    transition: border-color var(--transition), box-shadow var(--transition);
+    outline: none; font-family: inherit;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .setup-steps {
+    list-style: none; counter-reset: steps;
+    display: flex; flex-direction: column; gap: 10px;
+    margin: 12px 0 16px;
+  }
+  .setup-steps li {
+    counter-increment: steps; display: flex;
+    gap: 10px; font-size: 13px; color: var(--gray-600); line-height: 1.5;
+  }
+  .setup-steps li::before {
+    content: counter(steps);
+    background: var(--primary-light); color: var(--primary);
+    border-radius: 50%; width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+  }
+  .setup-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+  }
+  .toast {
+    background: var(--gray-900); color: #fff;
+    padding: 10px 16px; border-radius: 10px;
+    font-size: 13px; font-weight: 500;
+    animation: toastIn 0.25s ease both;
+    box-shadow: var(--shadow-lg); max-width: 300px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error   { background: var(--danger); }
+  @keyframes toastIn {
+    from { opacity:0; transform: translateY(10px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE HEADER ── */
+  @media (max-width: 640px) {
+    .header { padding: 0 14px; }
+    .brand-subtitle { display: none; }
+    .main { padding: 18px 12px; }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="header-left">
+<!-- ════════════════ HEADER ════════════════ -->
+<header class="header">
+  <div class="brand">
     <div class="brand-icon">F</div>
     <div class="brand-text">
-      <h1>Finance North America</h1>
-      <p>Manager Hub</p>
+      <span class="brand-title">Finance North America</span>
+      <span class="brand-subtitle">Manager Hub</span>
     </div>
-    <div class="mgr-pill">Manager View</div>
   </div>
-  <div class="header-right">
-    <div class="sync-status idle" id="syncEl"><div class="sync-dot"></div><span id="syncTxt">Not connected</span></div>
+  <div class="header-sep"></div>
+  <div class="header-actions">
+    <div class="sync-pill idle" id="syncPill">
+      <div class="sync-dot"></div>
+      <span id="syncText">Idle</span>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="openSetupModal()">⚙ Setup</button>
     <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
-    <button class="btn btn-ghost btn-sm" onclick="openSetup()">⚙ Setup</button>
   </div>
 </header>
 
-<main>
-  <div class="page-title">Team Overview</div>
-  <div class="page-sub">Click <strong>Open Dashboard</strong> to view and manage each team member's tasks.</div>
+<!-- ════════════════ MAIN ════════════════ -->
+<main class="main">
+  <div class="page-hero">
+    <div class="page-title">Manager Hub</div>
+    <div class="page-sub">Overview of all employee task statuses</div>
+  </div>
 
-  <div class="cards-grid" id="cardsGrid">
-    <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-400)">
-      <div style="font-size:36px;margin-bottom:12px">🔌</div>
-      <div style="font-size:15px;font-weight:600;margin-bottom:6px">Not connected yet</div>
-      <div style="font-size:13px;margin-bottom:20px">Click Setup to connect your Google Apps Script.</div>
-      <button class="btn btn-primary" onclick="openSetup()">⚙ Setup Connection</button>
-    </div>
+  <div class="employee-grid" id="employeeGrid">
+    <!-- Cards rendered by JS -->
   </div>
 </main>
 
-<!-- SETUP MODAL -->
-<div class="modal-overlay" id="setupModal">
+<!-- ════════════════ SETUP MODAL ════════════════ -->
+<div class="modal-backdrop" id="setupModal">
   <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-title">⚙ Manager Hub Setup</div>
-      <button class="modal-close" id="setupClose" onclick="closeSetup()">✕</button>
+    <div class="modal-header">
+      <span class="modal-title">⚙ Setup</span>
+      <button class="modal-close" id="setupCloseX" onclick="closeModal('setupModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="fg">
-        <label class="fl">Google Apps Script Web App URL</label>
-        <input class="fi" id="sUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <div class="form-group">
+        <label class="form-label">Google Apps Script URL</label>
+        <input type="url" class="form-input" id="setupUrl"
+               placeholder="https://script.google.com/macros/s/…/exec">
       </div>
-      <div style="border-top:1px solid var(--gray-100);padding-top:14px;">
-        <p style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">First time? Follow these steps:</p>
-        <div class="setup-step"><div class="step-num">1</div><div><div class="step-t">Open Google Apps Script</div><div class="step-d">Go to <code>script.google.com</code> → New project</div></div></div>
-        <div class="setup-step"><div class="step-num">2</div><div><div class="step-t">Paste Code.gs</div><div class="step-d">Replace all content with the provided <code>Code.gs</code> file → Save</div></div></div>
-        <div class="setup-step"><div class="step-num">3</div><div><div class="step-t">Deploy as Web App</div><div class="step-d">Deploy → New deployment → Web app | Execute as: <strong>Me</strong> | Access: <strong>Anyone</strong></div></div></div>
-        <div class="setup-step"><div class="step-num">4</div><div><div class="step-t">Paste the /exec URL above</div><div class="step-d">Test → Connect.</div></div></div>
+      <ol class="setup-steps">
+        <li>Open Google Sheets → Extensions → Apps Script</li>
+        <li>Paste the Finance North America Apps Script code</li>
+        <li>Deploy as Web App — set access to "Anyone"</li>
+        <li>Copy the deployment URL and paste it above</li>
+      </ol>
+      <div class="setup-btn-row">
+        <button class="btn btn-ghost" onclick="testConnection()">🔌 Test Connection</button>
+        <button class="btn btn-primary" onclick="saveSetup()">Connect</button>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" id="testBtn" onclick="testConn()">🔍 Test Connection</button>
-      <button class="btn btn-primary" onclick="saveSetup()">Connect & Load</button>
+    <div class="modal-footer">
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="setupCancelBtn" onclick="closeModal('setupModal')">Close</button>
     </div>
   </div>
 </div>
 
-<div class="loader hidden" id="loader"><div class="spinner"></div><div style="font-size:13px;font-weight:600;color:var(--gray-600)">Loading team data…</div></div>
-<div class="toast" id="toast"></div>
+<!-- ════════════════ TOAST ════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
 
+<!-- ════════════════ SCRIPT ════════════════ -->
 <script>
-// ─── CONFIG ────────────────────────────────────────────────────────────────
-let SCRIPT_URL = localStorage.getItem('fna_script_url') || '';
-const MEMBERS  = ['Kim', 'Ronit', 'Vicky'];
-let allData    = {}; // { Kim: [...tasks], Ronit: [...], Vicky: [...] }
+'use strict';
 
-// ─── HELPERS ───────────────────────────────────────────────────────────────
-function fmt(d){return d?new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';}
-function isOD(t){if(!t.dueDate||t.status==='done')return false;const n=new Date();n.setHours(0,0,0,0);return new Date(t.dueDate+'T00:00:00')<n;}
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
-function setSSync(s,txt){
-  const el=document.getElementById('syncEl');
-  const lbl={idle:'Not connected',saving:'Loading…',loaded:'Data loaded',error:'Load failed'};
-  el.className='sync-status '+s;
-  document.getElementById('syncTxt').textContent=txt||lbl[s];
+const EMPLOYEES = ['Kim', 'Ronit', 'Vicky'];
+let SCRIPT_URL  = localStorage.getItem('fna_script_url') || '';
+let allData     = {}; // { Kim: [...], Ronit: [...], Vicky: [...] }
+let refreshTimer = null;
+const REFRESH_MS = 60000;
+
+const LS_URL = 'fna_script_url';
+
+// accent colours per employee
+const EMP_META = {
+  Kim:   { avatarClass: 'avatar-kim',   cardClass: 'emp-card-kim',   initials: 'K'  },
+  Ronit: { avatarClass: 'avatar-ronit', cardClass: 'emp-card-ronit', initials: 'RK' },
+  Vicky: { avatarClass: 'avatar-vicky', cardClass: 'emp-card-vicky', initials: 'V'  },
+};
+
+// ─── INIT ─────────────────────────────────────────────
+function init() {
+  renderCards(null); // render skeleton/dash state first
+  if (!SCRIPT_URL) {
+    openSetupModal(true);
+    return;
+  }
+  loadAll();
+  scheduleRefresh();
 }
 
-// ─── LOAD ALL DATA ─────────────────────────────────────────────────────────
-async function loadAll(){
-  if(!SCRIPT_URL){openSetup();return;}
-  document.getElementById('loader').classList.remove('hidden');
-  setSSync('saving','Loading…');
-  try{
-    const r=await fetch(`${SCRIPT_URL}?employee=all&t=${Date.now()}`);
-    const j=await r.json();
-    if(j.success&&j.all){
-      allData=j.all;
-      setSSync('loaded');
-      setTimeout(()=>setSSync('idle','✓ Connected'),3000);
-      renderCards();
-    }else{
-      setSSync('error');
-      toast('Failed to load data. Check your URL.');
+// ─── LOAD ─────────────────────────────────────────────
+async function loadAll() {
+  if (!SCRIPT_URL) { setSyncStatus('idle'); return; }
+  setSyncStatus('loading');
+  try {
+    const r = await fetch(`${SCRIPT_URL}?employee=all`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    // Expect { Kim:[...], Ronit:[...], Vicky:[...] }
+    // or flat array fallback
+    if (data && typeof data === 'object' && !Array.isArray(data)) {
+      allData = data;
+    } else {
+      // keep as-is if unexpected shape
+      allData = {};
     }
-  }catch(e){
-    setSSync('error');
-    toast('Cannot reach the script. Check your URL.');
-  }finally{
-    document.getElementById('loader').classList.add('hidden');
+    setSyncStatus('ok');
+    renderCards(allData);
+  } catch(e) {
+    setSyncStatus('error');
+    // Try cached data from localStorage
+    loadCachedData();
+    renderCards(allData);
   }
 }
 
-// ─── RENDER CARDS ──────────────────────────────────────────────────────────
-function renderCards(){
-  const grid=document.getElementById('cardsGrid');
-  grid.innerHTML=MEMBERS.map(name=>buildCard(name,allData[name]||[])).join('');
+function loadCachedData() {
+  EMPLOYEES.forEach(emp => {
+    try {
+      const raw = localStorage.getItem(`fna_tasks_${emp}`);
+      if (raw) allData[emp] = JSON.parse(raw);
+      else if (!allData[emp]) allData[emp] = null;
+    } catch(e) { allData[emp] = null; }
+  });
 }
 
-function buildCard(name,tasks){
-  const key=name.toLowerCase();
-  const pd  = tasks.filter(t=>isOD(t));
-  const ac  = tasks.filter(t=>!isOD(t)&&t.status!=='done');
-  const dn  = tasks.filter(t=>t.status==='done');
+// ─── REFRESH ──────────────────────────────────────────
+function scheduleRefresh() {
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadAll, REFRESH_MS);
+}
 
-  // Top 3 active / past-due tasks for preview
-  const preview=[...pd,...ac].slice(0,3);
+// ─── HELPERS ──────────────────────────────────────────
+function todayStr() { return new Date().toISOString().split('T')[0]; }
 
-  const previewHtml=preview.length
-    ?preview.map(t=>`
-      <div class="preview-item">
-        <div class="preview-dot ${t.priority}"></div>
-        <div class="preview-name">${t.title}</div>
-        ${t.dueDate?`<div class="preview-date${isOD(t)?' red':''}">${fmt(t.dueDate)}</div>`:''}
-      </div>`).join('')
-    :`<div class="preview-empty">No open tasks</div>`;
+function isOverdue(t) {
+  if (!t.dueDate || t.status === 'done') return false;
+  return t.dueDate < todayStr();
+}
 
-  return `
-    <div class="emp-card">
-      <div class="card-banner ${key}"></div>
-      <div class="card-inner">
-        <div class="card-head">
-          <div class="avatar ${key}">${name[0]}</div>
-          <div>
-            <div class="card-name">${name}</div>
-            <div class="card-role">Finance Team</div>
-          </div>
-        </div>
+function getStats(tasks) {
+  if (!tasks) return null;
+  const total    = tasks.length;
+  const pastDue  = tasks.filter(t => isOverdue(t)).length;
+  const inProg   = tasks.filter(t => !isOverdue(t) && t.status !== 'done').length;
+  const done     = tasks.filter(t => t.status === 'done').length;
+  return { total, pastDue, inProg, done };
+}
 
-        <div class="stats-row">
-          <div class="stat-box total">
-            <div class="stat-num">${tasks.length}</div>
-            <div class="stat-lbl">Total</div>
-          </div>
-          <div class="stat-box pastdue">
-            <div class="stat-num">${pd.length}</div>
-            <div class="stat-lbl">Past Due</div>
-          </div>
-          <div class="stat-box active">
-            <div class="stat-num">${ac.length}</div>
-            <div class="stat-lbl">Active</div>
-          </div>
-          <div class="stat-box done">
-            <div class="stat-num">${dn.length}</div>
-            <div class="stat-lbl">Done</div>
-          </div>
-        </div>
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
 
-        <div class="preview-title">Open Tasks</div>
-        <div style="margin-bottom:16px">${previewHtml}</div>
+// ─── RENDER ───────────────────────────────────────────
+function renderCards(data) {
+  const grid = document.getElementById('employeeGrid');
+  grid.innerHTML = '';
+  EMPLOYEES.forEach(emp => {
+    const tasks = data ? data[emp] : undefined;
+    const card  = buildCard(emp, tasks);
+    grid.appendChild(card);
+  });
+}
 
-        <a href="employee.html?employee=${name}" target="_blank" style="text-decoration:none">
-          <button class="btn btn-primary btn-full">Open ${name}'s Dashboard →</button>
-        </a>
+function buildCard(emp, tasks) {
+  const meta  = EMP_META[emp] || { avatarClass:'avatar-kim', cardClass:'emp-card-kim', initials: emp.charAt(0).toUpperCase() };
+  const stats = getStats(tasks);
+  const noData = stats === null;
+
+  const dash = n => noData ? '–' : String(n);
+  const hasPastDue = stats && stats.pastDue > 0;
+
+  // mini bar widths
+  let barHtml = '';
+  if (!noData && stats.total > 0) {
+    const pd  = Math.round((stats.pastDue  / stats.total) * 100);
+    const ip  = Math.round((stats.inProg   / stats.total) * 100);
+    const dn  = Math.round((stats.done     / stats.total) * 100);
+    barHtml = `
+      <div class="mini-bar">
+        ${stats.pastDue > 0  ? `<div class="bar-seg bar-pastdue"  style="width:${pd}px;min-width:${pd>0?4:0}px"></div>` : ''}
+        ${stats.inProg > 0   ? `<div class="bar-seg bar-progress" style="width:${ip}px;min-width:${ip>0?4:0}px"></div>` : ''}
+        ${stats.done > 0     ? `<div class="bar-seg bar-done"     style="width:${dn}px;min-width:${dn>0?4:0}px"></div>` : ''}
+        <div class="bar-seg bar-empty"></div>
+      </div>`;
+  } else if (!noData) {
+    barHtml = `<div class="mini-bar"><div class="bar-seg bar-empty"></div></div>`;
+  } else {
+    barHtml = `<div class="mini-bar loading-pulse"><div class="bar-seg bar-empty"></div></div>`;
+  }
+
+  const card = document.createElement('div');
+  card.className = `emp-card ${meta.cardClass}`;
+
+  const numCls = noData ? 'stat-num loading loading-pulse' : 'stat-num';
+
+  card.innerHTML = `
+    ${hasPastDue ? `<div class="pastdue-banner">⚠ ${stats.pastDue} past due task${stats.pastDue>1?'s':''}</div>` : ''}
+    <div class="card-top">
+      <div class="avatar-row">
+        <div class="avatar ${meta.avatarClass}">${esc(meta.initials)}</div>
+        <div class="emp-name">${esc(emp)}</div>
       </div>
-    </div>`;
+      <div class="stats-row">
+        <div class="stat-box stat-total">
+          <div class="${numCls}">${dash(stats?.total)}</div>
+          <div class="stat-lbl">Total</div>
+        </div>
+        <div class="stat-box stat-pastdue">
+          <div class="${numCls}">${dash(stats?.pastDue)}</div>
+          <div class="stat-lbl">Past Due</div>
+        </div>
+        <div class="stat-box stat-progress">
+          <div class="${numCls}">${dash(stats?.inProg)}</div>
+          <div class="stat-lbl">In Progress</div>
+        </div>
+        <div class="stat-box stat-done">
+          <div class="${numCls}">${dash(stats?.done)}</div>
+          <div class="stat-lbl">Done</div>
+        </div>
+      </div>
+      ${barHtml}
+    </div>
+    <div class="card-footer-area">
+      <a class="open-btn" href="employee.html?employee=${encodeURIComponent(emp)}">
+        <span>Open Dashboard</span>
+        <span class="open-arrow">→</span>
+      </a>
+    </div>
+  `;
+
+  return card;
 }
 
-// ─── SETUP ─────────────────────────────────────────────────────────────────
-function openSetup(){
-  document.getElementById('sUrl').value=SCRIPT_URL;
-  document.getElementById('setupClose').style.display=SCRIPT_URL?'':'none';
-  document.getElementById('setupModal').classList.add('open');
-}
-function closeSetup(){document.getElementById('setupModal').classList.remove('open');}
-
-async function testConn(){
-  const url=document.getElementById('sUrl').value.trim();
-  if(!url){toast('Enter a URL first');return;}
-  const btn=document.getElementById('testBtn');
-  btn.textContent='⏳ Testing…';btn.disabled=true;
-  try{
-    const r=await fetch(`${url}?employee=Kim&t=${Date.now()}`);
-    const j=await r.json();
-    btn.textContent=j.success?'✅ Connected!':'❌ Script error';
-    btn.style.color=j.success?'var(--success)':'var(--danger)';
-  }catch{btn.textContent='❌ Failed';btn.style.color='var(--danger)';}
-  setTimeout(()=>{btn.textContent='🔍 Test Connection';btn.style.color='';btn.disabled=false;},3000);
+// ─── SYNC STATUS ─────────────────────────────────────
+function setSyncStatus(s) {
+  const pill = document.getElementById('syncPill');
+  const txt  = document.getElementById('syncText');
+  pill.className = 'sync-pill ' + s;
+  txt.textContent = { idle:'Idle', loading:'Loading…', ok:'Synced', error:'Error' }[s] || s;
 }
 
-async function saveSetup(){
-  const url=document.getElementById('sUrl').value.trim();
-  if(!url){toast('Please enter the script URL');return;}
-  SCRIPT_URL=url;
-  localStorage.setItem('fna_script_url',url);
-  closeSetup();
-  await loadAll();
+// ─── SETUP MODAL ─────────────────────────────────────
+function openSetupModal(force) {
+  document.getElementById('setupUrl').value = SCRIPT_URL;
+  const showClose = !force || !!SCRIPT_URL;
+  document.getElementById('setupCloseX').style.display   = showClose ? '' : 'none';
+  document.getElementById('setupCancelBtn').style.display = showClose ? '' : 'none';
+  openModal('setupModal');
 }
 
-// ─── AUTO-REFRESH ──────────────────────────────────────────────────────────
-setInterval(()=>{if(SCRIPT_URL)loadAll();},60000);
+function saveSetup() {
+  const url = document.getElementById('setupUrl').value.trim();
+  if (!url) { toast('Please enter a Script URL', 'error'); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem(LS_URL, url);
+  closeModal('setupModal');
+  loadAll();
+  scheduleRefresh();
+  toast('Setup saved', 'success');
+}
 
-// ─── INIT ──────────────────────────────────────────────────────────────────
-(function init(){
-  if(SCRIPT_URL){setSSync('idle','✓ Connected');loadAll();}
-  else openSetup();
-})();
+async function testConnection() {
+  const url = document.getElementById('setupUrl').value.trim();
+  if (!url) { toast('Enter a URL first', 'error'); return; }
+  try {
+    const r = await fetch(`${url}?employee=test`);
+    if (r.ok) toast('Connection successful!', 'success');
+    else      toast(`Server responded: ${r.status}`, 'error');
+  } catch(e) { toast('Connection failed — check URL', 'error'); }
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => {
+    if (e.target !== bd) return;
+    if (bd.id === 'setupModal' && !SCRIPT_URL) return;
+    closeModal(bd.id);
+  });
+});
+
+// ─── TOAST ────────────────────────────────────────────
+function toast(msg, type='') {
+  const c  = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className  = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ─── BOOT ─────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
