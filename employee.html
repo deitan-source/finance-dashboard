@@ -765,11 +765,24 @@ async function loadFromSheets() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { renderAll(); return; }
   setSyncStatus('saving');
   try {
-    const r = await fetch(`${SCRIPT_URL}?employee=${encodeURIComponent(EMPLOYEE_NAME)}`);
+    const r    = await fetch(`${SCRIPT_URL}?employee=${encodeURIComponent(EMPLOYEE_NAME)}&t=${Date.now()}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    if (Array.isArray(data)) { tasks = data; saveLocal(); }
-    setSyncStatus('saved');
+    const json = await r.json();
+    if (json.success) {
+      if (json.tasks && json.tasks.length > 0) {
+        // Sheets has data — use it (source of truth)
+        tasks = json.tasks;
+        saveLocal();
+        setSyncStatus('saved');
+      } else if (tasks.length > 0) {
+        // Sheets is empty but we have local tasks — push them up now
+        await doPush();
+      } else {
+        setSyncStatus('saved');
+      }
+    } else {
+      setSyncStatus('error');
+    }
   } catch(e) {
     setSyncStatus('error');
   }
