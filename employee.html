@@ -786,12 +786,16 @@ function schedulePush() {
 async function doPush() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { setSyncStatus('idle'); return; }
   try {
-    await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'saveTasks', employee: EMPLOYEE_NAME, tasks })
-    });
-    setSyncStatus('saved');
+    // Use GET instead of POST — Apps Script redirects POST→GET losing the body
+    const dataStr = JSON.stringify(tasks);
+    const url = SCRIPT_URL
+      + '?action=save'
+      + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
+      + '&data='     + encodeURIComponent(dataStr)
+      + '&t='        + Date.now();
+    const res  = await fetch(url);
+    const json = await res.json();
+    json.success ? setSyncStatus('saved') : setSyncStatus('error');
   } catch(e) {
     setSyncStatus('error');
   }
