@@ -675,20 +675,8 @@
           <span class="checkbox-label">I am the Manager</span>
         </label>
       </div>
-      <div class="form-group">
-        <label class="form-label">Google Apps Script URL</label>
-        <input type="url" class="form-input" id="setupUrl"
-               placeholder="https://script.google.com/macros/s/…/exec">
-      </div>
-      <ol class="setup-steps">
-        <li>Open Google Sheets → Extensions → Apps Script</li>
-        <li>Paste the Finance North America Apps Script code</li>
-        <li>Deploy as Web App — set access to "Anyone"</li>
-        <li>Copy the deployment URL and paste it above</li>
-      </ol>
       <div class="setup-btn-row">
-        <button class="btn btn-ghost" onclick="testConnection()">🔌 Test Connection</button>
-        <button class="btn btn-primary" onclick="saveSetup()">Connect</button>
+        <button class="btn btn-primary" onclick="saveSetup()">Save</button>
       </div>
     </div>
     <div class="modal-footer">
@@ -704,10 +692,14 @@
 <script>
 'use strict';
 
+// ─── JSONBIN CREDENTIALS ─────────────────────────────
+const BIN_ID     = '69c6bad3b7ec241ddcadafd8';
+const MASTER_KEY = '$2a$10$IJOoc25fj0KwRnNfRoIZj.UVoQfS9fXY6eAXKqJYG/gMhppK9A0/S';
+const JSONBIN    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
 // ─── STATE ───────────────────────────────────────────
 let EMPLOYEE_NAME = '';
 let IS_MANAGER    = false;
-let SCRIPT_URL    = '';
 let tasks         = [];
 let editingTaskId = null;
 let viewingTaskId = null;
@@ -716,7 +708,6 @@ let _cat    = 'ongoing';
 let _prio   = 'medium';
 let _status = 'inprogress';
 
-const LS_URL     = 'fna_script_url';
 const LS_MANAGER = 'fna_is_manager';
 const LS_NAME    = 'fna_employee_name';
 const LS_PREFIX  = 'fna_tasks_';
@@ -727,8 +718,6 @@ function init() {
   const urlEmp = params.get('employee');
   EMPLOYEE_NAME = urlEmp || localStorage.getItem(LS_NAME) || '';
   IS_MANAGER    = localStorage.getItem(LS_MANAGER) === 'true';
-  SCRIPT_URL    = localStorage.getItem(LS_URL) || '';
-
   applyNameToUI();
 
   if (!EMPLOYEE_NAME) {
@@ -736,8 +725,7 @@ function init() {
     return;
   }
   loadLocal();
-  if (SCRIPT_URL) loadFromSheets();
-  else renderAll();
+  loadFromJsonbin();
 }
 
 function applyNameToUI() {
@@ -761,40 +749,23 @@ function saveLocal() {
   localStorage.setItem(lsKey(), JSON.stringify(tasks));
 }
 
-// ─── SHEETS API ───────────────────────────────────────
-// Fetch with 20-second timeout — prevents infinite "Saving..." state
-async function fetchT(url, opts = {}) {
-  const ctrl = new AbortController();
-  const tid  = setTimeout(() => ctrl.abort(), 20000);
-  try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
-  } finally {
-    clearTimeout(tid);
-  }
-}
-
-async function loadFromSheets() {
-  if (!SCRIPT_URL || !EMPLOYEE_NAME) { renderAll(); return; }
+// ─── JSONBIN API ──────────────────────────────────────
+async function loadFromJsonbin() {
+  if (!EMPLOYEE_NAME) { renderAll(); return; }
   setSyncStatus('idle', 'Loading...');
   try {
-    const r    = await fetchT(`${SCRIPT_URL}?employee=${encodeURIComponent(EMPLOYEE_NAME)}&t=${Date.now()}`);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const r    = await fetch(`${JSONBIN}/latest`, {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
     const json = await r.json();
-    if (json.success) {
-      if (json.tasks && json.tasks.length > 0) {
-        tasks = json.tasks;
-        saveLocal();
-        setSyncStatus('saved');
-      } else if (tasks.length > 0) {
-        await doPush();
-      } else {
-        setSyncStatus('idle', '✓ Connected');
-      }
-    } else {
-      setSyncStatus('error');
+    const remote = json.record?.[EMPLOYEE_NAME];
+    if (Array.isArray(remote) && remote.length > 0) {
+      tasks = remote;
+      saveLocal();
     }
+    setSyncStatus('idle', '✓ Connected');
   } catch(e) {
-    setSyncStatus('error', e.name === 'AbortError' ? 'Connection timed out' : 'Connection failed');
+    setSyncStatus('error', 'Load failed — check connection');
   }
   renderAll();
 }
@@ -809,54 +780,42 @@ function markChanged() {
 }
 
 async function manualSync() {
-  if (!SCRIPT_URL) { openSetupModal(true); return; }
   if (!EMPLOYEE_NAME) { openSetupModal(true); return; }
-
   const btn = document.getElementById('syncBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Syncing...';
   btn.style.background = '';
   btn.style.color = '';
   setSyncStatus('saving', 'Syncing...');
-
   try {
-    // Save each task sequentially
-    for (let i = 0; i < tasks.length; i++) {
-      const task = tasks[i];
-      btn.textContent = `⏳ ${i + 1}/${tasks.length}`;
-      const url = SCRIPT_URL
-        + '?action=saveTask'
-        + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
-        + '&taskId='   + encodeURIComponent(task.id)
-        + '&data='     + encodeURIComponent(JSON.stringify(task))
-        + '&t='        + Date.now();
-      const res  = await fetchT(url);
-      const json = await res.json();
-      if (!json.success) {
-        setSyncStatus('error', 'Sync failed — check Script URL');
-        btn.textContent = '☁ Sync'; btn.disabled = false;
-        return;
-      }
-    }
-    // Save index
-    const indexUrl = SCRIPT_URL
-      + '?action=saveIndex'
-      + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
-      + '&data='     + encodeURIComponent(JSON.stringify(tasks.map(t => t.id)))
-      + '&t='        + Date.now();
-    const iRes  = await fetchT(indexUrl);
-    const iJson = await iRes.json();
-    if (iJson.success) {
+    // 1. Get current bin (preserve other employees' data)
+    const getRes  = await fetch(`${JSONBIN}/latest`, {
+      headers: { 'X-Master-Key': MASTER_KEY }
+    });
+    const current = await getRes.json();
+    const binData = current.record || { Kim: [], Ronit: [], Vicky: [] };
+
+    // 2. Update this employee's tasks
+    binData[EMPLOYEE_NAME] = tasks;
+
+    // 3. PUT the full bin back
+    const putRes  = await fetch(JSONBIN, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+      body:    JSON.stringify(binData)
+    });
+    const result = await putRes.json();
+    if (result.record) {
       hasUnsavedChanges = false;
       setSyncStatus('saved', '✓ Synced');
       btn.textContent = '✓ Synced';
-      setTimeout(() => { btn.textContent = '☁ Sync'; }, 3000);
+      setTimeout(() => { btn.textContent = '☁ Sync'; btn.style.background=''; btn.style.color=''; }, 3000);
     } else {
-      setSyncStatus('error', 'Index save failed');
+      setSyncStatus('error', 'Sync failed');
       btn.textContent = '☁ Sync';
     }
   } catch(e) {
-    setSyncStatus('error', e.name === 'AbortError' ? 'Timed out — try again' : 'Sync failed');
+    setSyncStatus('error', 'Sync failed — check connection');
     btn.textContent = '☁ Sync';
   }
   btn.disabled = false;
@@ -1180,9 +1139,7 @@ function editCurrentTask() {
 function openSetupModal(force) {
   document.getElementById('setupName').value        = EMPLOYEE_NAME;
   document.getElementById('setupIsManager').checked = IS_MANAGER;
-  document.getElementById('setupUrl').value         = SCRIPT_URL;
-  const hasUrl = !!SCRIPT_URL;
-  const showClose = !force || hasUrl;
+  const showClose = !force || !!EMPLOYEE_NAME;
   document.getElementById('setupCloseX').style.display    = showClose ? '' : 'none';
   document.getElementById('setupCancelBtn').style.display = showClose ? '' : 'none';
   openModal('setupModal');
@@ -1191,29 +1148,15 @@ function openSetupModal(force) {
 function saveSetup() {
   const name = document.getElementById('setupName').value.trim();
   if (!name) { toast('Please enter your name', 'error'); return; }
-  const url = document.getElementById('setupUrl').value.trim();
   EMPLOYEE_NAME = name;
   IS_MANAGER    = document.getElementById('setupIsManager').checked;
-  SCRIPT_URL    = url;
   localStorage.setItem(LS_NAME,    name);
   localStorage.setItem(LS_MANAGER, String(IS_MANAGER));
-  if (url) localStorage.setItem(LS_URL, url);
   applyNameToUI();
   closeModal('setupModal');
   loadLocal();
-  if (SCRIPT_URL) loadFromSheets();
-  else renderAll();
+  loadFromJsonbin();
   toast('Setup saved', 'success');
-}
-
-async function testConnection() {
-  const url = document.getElementById('setupUrl').value.trim();
-  if (!url) { toast('Enter a URL first', 'error'); return; }
-  try {
-    const r = await fetch(`${url}?employee=test`);
-    if (r.ok) toast('Connection successful!', 'success');
-    else      toast(`Server responded: ${r.status}`, 'error');
-  } catch(e) { toast('Connection failed — check URL', 'error'); }
 }
 
 // ─── MODAL HELPERS ────────────────────────────────────
@@ -1223,7 +1166,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
   bd.addEventListener('click', e => {
     if (e.target !== bd) return;
-    if (bd.id === 'setupModal' && !SCRIPT_URL && !EMPLOYEE_NAME) return;
+    if (bd.id === 'setupModal' && !EMPLOYEE_NAME) return;
     closeModal(bd.id);
   });
 });
