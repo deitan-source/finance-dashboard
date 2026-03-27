@@ -761,30 +761,39 @@ function saveLocal() {
 }
 
 // ─── SHEETS API ───────────────────────────────────────
+// Fetch with 20-second timeout — prevents infinite "Saving..." state
+async function fetchT(url, opts = {}) {
+  const ctrl = new AbortController();
+  const tid  = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
 async function loadFromSheets() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { renderAll(); return; }
-  setSyncStatus('saving');
+  setSyncStatus('idle', 'Loading...');
   try {
-    const r    = await fetch(`${SCRIPT_URL}?employee=${encodeURIComponent(EMPLOYEE_NAME)}&t=${Date.now()}`);
+    const r    = await fetchT(`${SCRIPT_URL}?employee=${encodeURIComponent(EMPLOYEE_NAME)}&t=${Date.now()}`);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const json = await r.json();
     if (json.success) {
       if (json.tasks && json.tasks.length > 0) {
-        // Sheets has data — use it (source of truth)
         tasks = json.tasks;
         saveLocal();
         setSyncStatus('saved');
       } else if (tasks.length > 0) {
-        // Sheets is empty but we have local tasks — push them up now
         await doPush();
       } else {
-        setSyncStatus('saved');
+        setSyncStatus('idle', '✓ Connected');
       }
     } else {
       setSyncStatus('error');
     }
   } catch(e) {
-    setSyncStatus('error');
+    setSyncStatus('error', e.name === 'AbortError' ? 'Connection timed out' : 'Connection failed');
   }
   renderAll();
 }
@@ -798,27 +807,27 @@ function schedulePush() {
 
 async function doPush() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { setSyncStatus('idle'); return; }
+  setSyncStatus('saving');
   try {
-    // Use GET instead of POST — Apps Script redirects POST→GET losing the body
     const dataStr = JSON.stringify(tasks);
     const url = SCRIPT_URL
       + '?action=save'
       + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
       + '&data='     + encodeURIComponent(dataStr)
       + '&t='        + Date.now();
-    const res  = await fetch(url);
+    const res  = await fetchT(url);
     const json = await res.json();
-    json.success ? setSyncStatus('saved') : setSyncStatus('error');
+    json.success ? setSyncStatus('saved') : setSyncStatus('error', 'Save failed — check Script URL');
   } catch(e) {
-    setSyncStatus('error');
+    setSyncStatus('error', e.name === 'AbortError' ? 'Save timed out' : 'Save failed');
   }
 }
 
-function setSyncStatus(s) {
+function setSyncStatus(s, customText) {
   const pill = document.getElementById('syncPill');
   const txt  = document.getElementById('syncText');
   pill.className = 'sync-pill ' + s;
-  txt.textContent = { idle:'Idle', saving:'Saving…', saved:'Saved', error:'Error' }[s] || s;
+  txt.textContent = customText || { idle:'✓ Connected', saving:'Saving…', saved:'Saved', error:'Error' }[s] || s;
 }
 
 // ─── HELPERS ─────────────────────────────────────────
