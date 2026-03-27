@@ -809,28 +809,27 @@ async function doPush() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { setSyncStatus('idle'); return; }
   setSyncStatus('saving');
   try {
-    // Save each task individually — avoids URL length limits
-    const saves = tasks.map(task => {
+    // Save tasks one by one — avoids Apps Script rate limiting
+    for (const task of tasks) {
       const url = SCRIPT_URL
         + '?action=saveTask'
         + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
         + '&taskId='   + encodeURIComponent(task.id)
         + '&data='     + encodeURIComponent(JSON.stringify(task))
         + '&t='        + Date.now();
-      return fetchT(url).then(r => r.json()).catch(() => ({ success: false }));
-    });
+      const res  = await fetchT(url);
+      const json = await res.json();
+      if (!json.success) { setSyncStatus('error', 'Save failed — check Script URL'); return; }
+    }
     // Save the index of existing task IDs
     const indexUrl = SCRIPT_URL
       + '?action=saveIndex'
       + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
       + '&data='     + encodeURIComponent(JSON.stringify(tasks.map(t => t.id)))
       + '&t='        + Date.now();
-    const indexSave = fetchT(indexUrl).then(r => r.json()).catch(() => ({ success: false }));
-
-    const results = await Promise.all([...saves, indexSave]);
-    results.every(r => r.success)
-      ? setSyncStatus('saved')
-      : setSyncStatus('error', 'Save failed — check Script URL');
+    const iRes  = await fetchT(indexUrl);
+    const iJson = await iRes.json();
+    iJson.success ? setSyncStatus('saved') : setSyncStatus('error', 'Save failed — check Script URL');
   } catch(e) {
     setSyncStatus('error', e.name === 'AbortError' ? 'Save timed out' : 'Save failed');
   }
