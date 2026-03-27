@@ -711,6 +711,7 @@ let tasks         = [];
 let editingTaskId = null;
 let viewingTaskId = null;
 let saveTimer     = null;
+let dirtyIds      = new Set(); // tracks which task IDs need syncing to Sheets
 let _cat    = 'ongoing';
 let _prio   = 'medium';
 let _status = 'inprogress';
@@ -798,9 +799,12 @@ async function loadFromSheets() {
   renderAll();
 }
 
-function schedulePush() {
+// taskId = specific task that changed; omit to mark all tasks dirty
+function schedulePush(taskId) {
   setSyncStatus('saving');
   saveLocal();
+  if (taskId) { dirtyIds.add(taskId); }
+  else        { tasks.forEach(t => dirtyIds.add(t.id)); }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(doPush, 1500);
 }
@@ -808,9 +812,10 @@ function schedulePush() {
 async function doPush() {
   if (!SCRIPT_URL || !EMPLOYEE_NAME) { setSyncStatus('idle'); return; }
   setSyncStatus('saving');
+  const toSave = tasks.filter(t => dirtyIds.has(t.id));
   try {
-    // Save tasks one by one — avoids Apps Script rate limiting
-    for (const task of tasks) {
+    // Save only the tasks that actually changed (1-2 tasks per action)
+    for (const task of toSave) {
       const url = SCRIPT_URL
         + '?action=saveTask'
         + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
@@ -820,8 +825,9 @@ async function doPush() {
       const res  = await fetchT(url);
       const json = await res.json();
       if (!json.success) { setSyncStatus('error', 'Save failed — check Script URL'); return; }
+      dirtyIds.delete(task.id);
     }
-    // Save the index of existing task IDs
+    // Always save the index (reflects any additions / deletions)
     const indexUrl = SCRIPT_URL
       + '?action=saveIndex'
       + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
@@ -829,7 +835,8 @@ async function doPush() {
       + '&t='        + Date.now();
     const iRes  = await fetchT(indexUrl);
     const iJson = await iRes.json();
-    iJson.success ? setSyncStatus('saved') : setSyncStatus('error', 'Save failed — check Script URL');
+    if (iJson.success) { dirtyIds.clear(); setSyncStatus('saved'); }
+    else setSyncStatus('error', 'Save failed — check Script URL');
   } catch(e) {
     setSyncStatus('error', e.name === 'AbortError' ? 'Save timed out' : 'Save failed');
   }
@@ -1030,9 +1037,10 @@ function saveTask() {
       createdAt: new Date().toISOString()
     });
   }
+  const savedId = editingTaskId || tasks[tasks.length - 1].id;
   closeModal('taskModal');
   renderAll();
-  schedulePush();
+  schedulePush(savedId); // only sync the changed task
   toast(editingTaskId ? 'Task updated' : 'Task added', 'success');
 }
 
@@ -1042,7 +1050,7 @@ function deleteCurrentTask() {
   tasks = tasks.filter(t => t.id !== editingTaskId);
   closeModal('taskModal');
   renderAll();
-  schedulePush();
+  schedulePush(); // no specific task — just update the index
   toast('Task deleted');
 }
 
@@ -1113,7 +1121,7 @@ function toggleCommentRead(taskId, commentId) {
   c.read = !c.read;
   renderComments(t);
   render();
-  schedulePush();
+  schedulePush(taskId);
 }
 
 let currentCommentAs = 'employee'; // 'manager' | 'employee'
@@ -1142,7 +1150,7 @@ function sendComment() {
   });
   inp.value = '';
   renderComments(t);
-  schedulePush();
+  schedulePush(viewingTaskId); // only sync the task that got a new comment
 }
 
 function editCurrentTask() {
