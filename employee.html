@@ -483,8 +483,9 @@
   <div class="header-actions">
     <div class="sync-pill idle" id="syncPill">
       <div class="sync-dot"></div>
-      <span id="syncText">Idle</span>
+      <span id="syncText">Unsaved changes</span>
     </div>
+    <button class="btn btn-ghost btn-sm" id="syncBtn" onclick="manualSync()">☁ Sync</button>
     <button class="btn btn-ghost btn-sm" onclick="openSetupModal()">⚙ Setup</button>
     <button class="btn btn-primary btn-sm" onclick="openAddTask()">+ New Task</button>
   </div>
@@ -710,8 +711,7 @@ let SCRIPT_URL    = '';
 let tasks         = [];
 let editingTaskId = null;
 let viewingTaskId = null;
-let saveTimer     = null;
-let dirtyIds      = new Set(); // tracks which task IDs need syncing to Sheets
+let hasUnsavedChanges = false;
 let _cat    = 'ongoing';
 let _prio   = 'medium';
 let _status = 'inprogress';
@@ -799,23 +799,31 @@ async function loadFromSheets() {
   renderAll();
 }
 
-// taskId = specific task that changed; omit to mark all tasks dirty
-function schedulePush(taskId) {
-  setSyncStatus('saving');
+// Called after every local change — saves to localStorage and flags unsaved state
+function markChanged() {
   saveLocal();
-  if (taskId) { dirtyIds.add(taskId); }
-  else        { tasks.forEach(t => dirtyIds.add(t.id)); }
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(doPush, 1500);
+  hasUnsavedChanges = true;
+  setSyncStatus('idle', 'Unsaved changes');
+  document.getElementById('syncBtn').style.background = 'var(--warning-light)';
+  document.getElementById('syncBtn').style.color      = 'var(--warning)';
 }
 
-async function doPush() {
-  if (!SCRIPT_URL || !EMPLOYEE_NAME) { setSyncStatus('idle'); return; }
-  setSyncStatus('saving');
-  const toSave = tasks.filter(t => dirtyIds.has(t.id));
+async function manualSync() {
+  if (!SCRIPT_URL) { openSetupModal(true); return; }
+  if (!EMPLOYEE_NAME) { openSetupModal(true); return; }
+
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Syncing...';
+  btn.style.background = '';
+  btn.style.color = '';
+  setSyncStatus('saving', 'Syncing...');
+
   try {
-    // Save only the tasks that actually changed (1-2 tasks per action)
-    for (const task of toSave) {
+    // Save each task sequentially
+    for (let i = 0; i < tasks.length; i++) {
+      const task = tasks[i];
+      btn.textContent = `⏳ ${i + 1}/${tasks.length}`;
       const url = SCRIPT_URL
         + '?action=saveTask'
         + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
@@ -824,10 +832,13 @@ async function doPush() {
         + '&t='        + Date.now();
       const res  = await fetchT(url);
       const json = await res.json();
-      if (!json.success) { setSyncStatus('error', 'Save failed — check Script URL'); return; }
-      dirtyIds.delete(task.id);
+      if (!json.success) {
+        setSyncStatus('error', 'Sync failed — check Script URL');
+        btn.textContent = '☁ Sync'; btn.disabled = false;
+        return;
+      }
     }
-    // Always save the index (reflects any additions / deletions)
+    // Save index
     const indexUrl = SCRIPT_URL
       + '?action=saveIndex'
       + '&employee=' + encodeURIComponent(EMPLOYEE_NAME)
@@ -835,11 +846,20 @@ async function doPush() {
       + '&t='        + Date.now();
     const iRes  = await fetchT(indexUrl);
     const iJson = await iRes.json();
-    if (iJson.success) { dirtyIds.clear(); setSyncStatus('saved'); }
-    else setSyncStatus('error', 'Save failed — check Script URL');
+    if (iJson.success) {
+      hasUnsavedChanges = false;
+      setSyncStatus('saved', '✓ Synced');
+      btn.textContent = '✓ Synced';
+      setTimeout(() => { btn.textContent = '☁ Sync'; }, 3000);
+    } else {
+      setSyncStatus('error', 'Index save failed');
+      btn.textContent = '☁ Sync';
+    }
   } catch(e) {
-    setSyncStatus('error', e.name === 'AbortError' ? 'Save timed out' : 'Save failed');
+    setSyncStatus('error', e.name === 'AbortError' ? 'Timed out — try again' : 'Sync failed');
+    btn.textContent = '☁ Sync';
   }
+  btn.disabled = false;
 }
 
 function setSyncStatus(s, customText) {
@@ -1037,10 +1057,9 @@ function saveTask() {
       createdAt: new Date().toISOString()
     });
   }
-  const savedId = editingTaskId || tasks[tasks.length - 1].id;
   closeModal('taskModal');
   renderAll();
-  schedulePush(savedId); // only sync the changed task
+  markChanged();
   toast(editingTaskId ? 'Task updated' : 'Task added', 'success');
 }
 
@@ -1050,7 +1069,7 @@ function deleteCurrentTask() {
   tasks = tasks.filter(t => t.id !== editingTaskId);
   closeModal('taskModal');
   renderAll();
-  schedulePush(); // no specific task — just update the index
+  markChanged();
   toast('Task deleted');
 }
 
@@ -1121,7 +1140,7 @@ function toggleCommentRead(taskId, commentId) {
   c.read = !c.read;
   renderComments(t);
   render();
-  schedulePush(taskId);
+  markChanged();
 }
 
 let currentCommentAs = 'employee'; // 'manager' | 'employee'
@@ -1150,7 +1169,7 @@ function sendComment() {
   });
   inp.value = '';
   renderComments(t);
-  schedulePush(viewingTaskId); // only sync the task that got a new comment
+  markChanged();
 }
 
 function editCurrentTask() {
