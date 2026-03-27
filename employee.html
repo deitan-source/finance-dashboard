@@ -500,11 +500,35 @@
       <span class="section-icon">♻</span>
       <span class="section-title">Recurring Tasks</span>
       <span class="count-badge" id="recurringCount">0</span>
-      <button class="btn btn-ghost btn-sm" onclick="openAddTask('recurring', event)">+ Add Task</button>
       <span class="collapse-toggle" id="recurringToggle">▾</span>
     </div>
     <div class="section-body" id="recurringBody">
-      <div class="task-grid" id="recurringGrid"></div>
+      <!-- Recurring Past Due -->
+      <div class="subsection sub-pastdue">
+        <div class="subsection-header">
+          <span class="subsection-icon">🔴</span>
+          <span class="subsection-title">Past Due</span>
+          <span class="sub-count" id="recurringPastDueCount">0</span>
+          <div class="subsection-spacer"></div>
+          <span class="subsection-toggle" id="recurringPastDueToggle" onclick="toggleSub('recurringPastDue',event)">▾</span>
+        </div>
+        <div class="subsection-body" id="recurringPastDueBody">
+          <div class="task-grid" id="recurringPastDueGrid"></div>
+        </div>
+      </div>
+      <!-- Recurring Active -->
+      <div class="subsection sub-inprogress">
+        <div class="subsection-header">
+          <span class="subsection-icon">🔵</span>
+          <span class="subsection-title">Active</span>
+          <span class="sub-count" id="recurringActiveCount">0</span>
+          <div class="subsection-spacer"></div>
+          <span class="subsection-toggle" id="recurringActiveToggle" onclick="toggleSub('recurringActive',event)">▾</span>
+        </div>
+        <div class="subsection-body" id="recurringActiveBody">
+          <div class="task-grid" id="recurringActiveGrid"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -538,7 +562,7 @@
           <span class="subsection-icon">🔵</span>
           <span class="subsection-title">In Progress</span>
           <span class="sub-count" id="inProgressCount">0</span>
-          <button class="btn btn-ghost btn-sm" onclick="openAddTask('ongoing', event)">+ Add Task</button>
+          <div class="subsection-spacer"></div>
           <span class="subsection-toggle" id="inProgressToggle" onclick="toggleSub('inProgress',event)">▾</span>
         </div>
         <div class="subsection-body" id="inProgressBody">
@@ -636,7 +660,7 @@
           <div class="comment-as-row">
             <span class="comment-as-text">Commenting as:</span>
             <div class="comment-as-toggle" id="commentAsToggle">
-              <button class="ca-btn" id="caBtnManager"  onclick="setCommentAs('manager')">Manager</button>
+              <button class="ca-btn" id="caBtnManager"  onclick="setCommentAs('manager')">Dvir</button>
               <button class="ca-btn" id="caBtnEmployee" onclick="setCommentAs('employee')">—</button>
             </div>
           </div>
@@ -770,13 +794,16 @@ async function loadFromJsonbin() {
   renderAll();
 }
 
-// Called after every local change — saves to localStorage and flags unsaved state
+// Called after every local change — saves locally then auto-syncs after 2s
+let autoSyncTimer = null;
 function markChanged() {
   saveLocal();
   hasUnsavedChanges = true;
   setSyncStatus('idle', 'Unsaved changes');
   document.getElementById('syncBtn').style.background = 'var(--warning-light)';
   document.getElementById('syncBtn').style.color      = 'var(--warning)';
+  clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(manualSync, 2000);
 }
 
 async function manualSync() {
@@ -863,22 +890,27 @@ function esc(s) {
 
 // ─── RENDER ───────────────────────────────────────────
 function renderAll() {
-  const recurring   = tasks.filter(t => t.category === 'recurring');
-  const ongoing     = tasks.filter(t => t.category !== 'recurring');
-  const pastDue     = ongoing.filter(t => isOverdue(t));
-  const inProgress  = ongoing.filter(t => !isOverdue(t) && t.status !== 'done');
-  const done        = ongoing.filter(t => t.status === 'done');
+  const recurring        = tasks.filter(t => t.category === 'recurring');
+  const recurPastDue     = recurring.filter(t => isOverdue(t));
+  const recurActive      = recurring.filter(t => !isOverdue(t));
+  const ongoing          = tasks.filter(t => t.category !== 'recurring');
+  const pastDue          = ongoing.filter(t => isOverdue(t));
+  const inProgress       = ongoing.filter(t => !isOverdue(t) && t.status !== 'done');
+  const done             = ongoing.filter(t => t.status === 'done');
 
-  document.getElementById('recurringCount').textContent  = recurring.length;
-  document.getElementById('ongoingCount').textContent    = ongoing.length;
-  document.getElementById('pastDueCount').textContent    = pastDue.length;
-  document.getElementById('inProgressCount').textContent = inProgress.length;
-  document.getElementById('doneCount').textContent       = done.length;
+  document.getElementById('recurringCount').textContent        = recurring.length;
+  document.getElementById('recurringPastDueCount').textContent = recurPastDue.length;
+  document.getElementById('recurringActiveCount').textContent  = recurActive.length;
+  document.getElementById('ongoingCount').textContent          = ongoing.length;
+  document.getElementById('pastDueCount').textContent          = pastDue.length;
+  document.getElementById('inProgressCount').textContent       = inProgress.length;
+  document.getElementById('doneCount').textContent             = done.length;
 
-  renderGrid('recurringGrid',  recurring);
-  renderGrid('pastDueGrid',    pastDue);
-  renderGrid('inProgressGrid', inProgress);
-  renderGrid('doneGrid',       done);
+  renderGrid('recurringPastDueGrid', recurPastDue);
+  renderGrid('recurringActiveGrid',  recurActive);
+  renderGrid('pastDueGrid',          pastDue);
+  renderGrid('inProgressGrid',       inProgress);
+  renderGrid('doneGrid',             done);
 }
 
 function renderGrid(id, list) {
@@ -904,8 +936,11 @@ function makeCard(t) {
     ? `<span class="due-chip${over?' overdue':''}">📅 ${fmt(t.dueDate)}</span>` : '';
   const allComments  = t.comments || [];
   const unreadCount  = allComments.filter(c => !c.read).length;
-  const commentPart  = allComments.length > 0
-    ? `<span class="comment-badge ${unreadCount > 0 ? 'has-unread' : ''}">💬 ${allComments.length}${unreadCount > 0 ? `<span class="unread-dot"></span>` : ''}</span>` : '';
+  const commentPart  = unreadCount > 0
+    ? `<span class="comment-badge has-unread">💬 ${unreadCount}</span>`
+    : allComments.length > 0
+      ? `<span class="comment-badge">💬 ${allComments.length}</span>`
+      : '';
 
   el.innerHTML = `
     <div class="card-title">${esc(t.title)}</div>
@@ -1078,7 +1113,7 @@ function renderComments(t) {
     const ts = c.ts ? new Date(c.ts).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     const isUnread = !c.read;
     wrap.innerHTML = `
-      <div class="comment-author">${esc(c.author || (c.isManager ? 'Manager' : EMPLOYEE_NAME))}</div>
+      <div class="comment-author">${esc(c.author || (c.isManager ? 'Dvir' : EMPLOYEE_NAME))}</div>
       <div class="comment-bubble ${isUnread ? 'bubble-unread' : ''}">${esc(c.text)}</div>
       <div class="comment-footer">
         <span class="comment-ts">${ts}</span>
@@ -1120,7 +1155,7 @@ function sendComment() {
   const asManager = currentCommentAs === 'manager';
   t.comments.push({
     id: uid(),
-    author: asManager ? 'Manager' : (EMPLOYEE_NAME || 'Employee'),
+    author: asManager ? 'Dvir' : (EMPLOYEE_NAME || 'Employee'),
     isManager: asManager,
     text,
     ts: new Date().toISOString(),
