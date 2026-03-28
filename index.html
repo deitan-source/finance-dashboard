@@ -344,29 +344,18 @@
 <div class="modal-backdrop" id="setupModal">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">⚙ Setup</span>
-      <button class="modal-close" id="setupCloseX" onclick="closeModal('setupModal')">×</button>
+      <span class="modal-title">⚙ About</span>
+      <button class="modal-close" onclick="closeModal('setupModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">Google Apps Script URL</label>
-        <input type="url" class="form-input" id="setupUrl"
-               placeholder="https://script.google.com/macros/s/…/exec">
-      </div>
-      <ol class="setup-steps">
-        <li>Open Google Sheets → Extensions → Apps Script</li>
-        <li>Paste the Finance North America Apps Script code</li>
-        <li>Deploy as Web App — set access to "Anyone"</li>
-        <li>Copy the deployment URL and paste it above</li>
-      </ol>
-      <div class="setup-btn-row">
-        <button class="btn btn-ghost" onclick="testConnection()">🔌 Test Connection</button>
-        <button class="btn btn-primary" onclick="saveSetup()">Connect</button>
-      </div>
+      <p style="font-size:14px;color:var(--gray-600);line-height:1.6;">
+        Finance North America — Manager Hub<br>
+        Data is synced via jsonbin.io and shared across all team members.
+      </p>
     </div>
     <div class="modal-footer">
       <div class="spacer"></div>
-      <button class="btn btn-ghost" id="setupCancelBtn" onclick="closeModal('setupModal')">Close</button>
+      <button class="btn btn-ghost" onclick="closeModal('setupModal')">Close</button>
     </div>
   </div>
 </div>
@@ -378,13 +367,12 @@
 <script>
 'use strict';
 
-const EMPLOYEES = ['Kim', 'Ronit', 'Vicky'];
-let SCRIPT_URL  = localStorage.getItem('fna_script_url') || '';
-let allData     = {}; // { Kim: [...], Ronit: [...], Vicky: [...] }
-let refreshTimer = null;
-const REFRESH_MS = 60000;
+const BIN_ID     = '69c6bad3b7ec241ddcadafd8';
+const MASTER_KEY = '$2a$10$IJOoc25fj0KwRnNfRoIZj.UVoQfS9fXY6eAXKqJYG/gMhppK9A0/S';
+const JSONBIN    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-const LS_URL = 'fna_script_url';
+const EMPLOYEES = ['Kim', 'Ronit', 'Vicky'];
+let allData = {};
 
 // accent colours per employee
 const EMP_META = {
@@ -395,55 +383,25 @@ const EMP_META = {
 
 // ─── INIT ─────────────────────────────────────────────
 function init() {
-  renderCards(null); // render skeleton/dash state first
-  if (!SCRIPT_URL) {
-    openSetupModal(true);
-    return;
-  }
+  renderCards(null);
   loadAll();
-  scheduleRefresh();
 }
 
 // ─── LOAD ─────────────────────────────────────────────
 async function loadAll() {
-  if (!SCRIPT_URL) { setSyncStatus('idle'); return; }
   setSyncStatus('loading');
   try {
-    const r = await fetch(`${SCRIPT_URL}?employee=all`);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    // Expect { Kim:[...], Ronit:[...], Vicky:[...] }
-    // or flat array fallback
-    if (data && typeof data === 'object' && !Array.isArray(data)) {
-      allData = data;
-    } else {
-      // keep as-is if unexpected shape
-      allData = {};
+    const r    = await fetch(`${JSONBIN}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
+    const json = await r.json();
+    if (json.record && typeof json.record === 'object') {
+      allData = json.record;
     }
     setSyncStatus('ok');
     renderCards(allData);
   } catch(e) {
     setSyncStatus('error');
-    // Try cached data from localStorage
-    loadCachedData();
     renderCards(allData);
   }
-}
-
-function loadCachedData() {
-  EMPLOYEES.forEach(emp => {
-    try {
-      const raw = localStorage.getItem(`fna_tasks_${emp}`);
-      if (raw) allData[emp] = JSON.parse(raw);
-      else if (!allData[emp]) allData[emp] = null;
-    } catch(e) { allData[emp] = null; }
-  });
-}
-
-// ─── REFRESH ──────────────────────────────────────────
-function scheduleRefresh() {
-  clearInterval(refreshTimer);
-  refreshTimer = setInterval(loadAll, REFRESH_MS);
 }
 
 // ─── HELPERS ──────────────────────────────────────────
@@ -561,33 +519,8 @@ function setSyncStatus(s) {
 }
 
 // ─── SETUP MODAL ─────────────────────────────────────
-function openSetupModal(force) {
-  document.getElementById('setupUrl').value = SCRIPT_URL;
-  const showClose = !force || !!SCRIPT_URL;
-  document.getElementById('setupCloseX').style.display   = showClose ? '' : 'none';
-  document.getElementById('setupCancelBtn').style.display = showClose ? '' : 'none';
+function openSetupModal() {
   openModal('setupModal');
-}
-
-function saveSetup() {
-  const url = document.getElementById('setupUrl').value.trim();
-  if (!url) { toast('Please enter a Script URL', 'error'); return; }
-  SCRIPT_URL = url;
-  localStorage.setItem(LS_URL, url);
-  closeModal('setupModal');
-  loadAll();
-  scheduleRefresh();
-  toast('Setup saved', 'success');
-}
-
-async function testConnection() {
-  const url = document.getElementById('setupUrl').value.trim();
-  if (!url) { toast('Enter a URL first', 'error'); return; }
-  try {
-    const r = await fetch(`${url}?employee=test`);
-    if (r.ok) toast('Connection successful!', 'success');
-    else      toast(`Server responded: ${r.status}`, 'error');
-  } catch(e) { toast('Connection failed — check URL', 'error'); }
 }
 
 // ─── MODAL HELPERS ────────────────────────────────────
@@ -596,9 +529,7 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 document.querySelectorAll('.modal-backdrop').forEach(bd => {
   bd.addEventListener('click', e => {
-    if (e.target !== bd) return;
-    if (bd.id === 'setupModal' && !SCRIPT_URL) return;
-    closeModal(bd.id);
+    if (e.target === bd) closeModal(bd.id);
   });
 });
 
