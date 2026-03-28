@@ -1216,4 +1216,42 @@ function openSetupModal(force) {
 
 function saveSetup() {
   const name = document.getElementById('setupName').value.trim();
-  if (!name) { t
+  if (!name) { toast('Please enter your name', 'error'); return; }
+  EMPLOYEE_NAME = name;
+  IS_MANAGER    = document.getElementById('setupIsManager').checked;
+  localStorage.setItem(LS_NAME,    name);
+  localStorage.setItem(LS_MANAGER, String(IS_MANAGER));
+  applyNameToUI();
+  closeModal('setupModal');
+  loadLocal();
+  loadFromJsonbin();
+  toast('Setup saved', 'success');
+}
+
+// ─── MODAL HELPERS ────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-backdrop').forEach(bd => {
+  bd.addEventListener('click', e => {
+    if (e.target !== bd) return;
+    if (bd.id === 'setupModal' && !EMPLOYEE_NAME) return;
+    closeModal(bd.id);
+  });
+});
+
+// ─── TOAST ────────────────────────────────────────────
+function toast(msg, type='') {
+  const c = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ─── BOOT ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
