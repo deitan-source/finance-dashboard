@@ -141,12 +141,14 @@
   .avatar-kim   { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
   .avatar-ronit { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
   .avatar-vicky { background: linear-gradient(135deg, #0d9488, #0f766e); }
+  .avatar-dvir  { background: linear-gradient(135deg, #d97706, #b45309); }
   .emp-name { font-size: 20px; font-weight: 800; color: var(--gray-900); }
 
   /* accent strip on left */
   .emp-card-kim   { border-left: 3px solid var(--primary); }
   .emp-card-ronit { border-left: 3px solid var(--purple); }
   .emp-card-vicky { border-left: 3px solid var(--teal); }
+  .emp-card-dvir  { border-left: 3px solid var(--warning); }
 
   /* ── STATS ── */
   .stats-row {
@@ -198,6 +200,8 @@
   .emp-card-ronit .open-btn:hover { background: #ddd6fe; }
   .emp-card-vicky .open-btn { background: var(--teal-light); color: var(--teal); }
   .emp-card-vicky .open-btn:hover { background: #99f6e4; }
+  .emp-card-dvir  .open-btn { background: var(--warning-light); color: var(--warning); }
+  .emp-card-dvir  .open-btn:hover { background: #fde68a; }
   .open-arrow { font-size: 16px; }
 
   /* ── LOADING STATE ── */
@@ -371,7 +375,7 @@ const BIN_ID     = '69c6bad3b7ec241ddcadafd8';
 const MASTER_KEY = '$2a$10$IJOoc25fj0KwRnNfRoIZj.UVoQfS9fXY6eAXKqJYG/gMhppK9A0/S';
 const JSONBIN    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-const EMPLOYEES = ['Kim', 'Ronit', 'Vicky'];
+const EMPLOYEES = ['Kim', 'Ronit', 'Vicky', 'Dvir'];
 let allData = {};
 
 // accent colours per employee
@@ -379,6 +383,7 @@ const EMP_META = {
   Kim:   { avatarClass: 'avatar-kim',   cardClass: 'emp-card-kim',   initials: 'K'  },
   Ronit: { avatarClass: 'avatar-ronit', cardClass: 'emp-card-ronit', initials: 'RK' },
   Vicky: { avatarClass: 'avatar-vicky', cardClass: 'emp-card-vicky', initials: 'V'  },
+  Dvir:  { avatarClass: 'avatar-dvir',  cardClass: 'emp-card-dvir',  initials: 'D'  },
 };
 
 // ─── INIT ─────────────────────────────────────────────
