@@ -807,16 +807,20 @@ async function loadFromJsonbin() {
   renderAll();
 }
 
-// Called after every local change — saves locally then auto-syncs after 2s
+// Called after every local change — saves locally then syncs (immediately or after 2s)
 let autoSyncTimer = null;
-function markChanged() {
+function markChanged(syncNow = false) {
   saveLocal();
   hasUnsavedChanges = true;
   setSyncStatus('idle', 'Unsaved changes');
   document.getElementById('syncBtn').style.background = 'var(--warning-light)';
   document.getElementById('syncBtn').style.color      = 'var(--warning)';
   clearTimeout(autoSyncTimer);
-  autoSyncTimer = setTimeout(manualSync, 2000);
+  if (syncNow) {
+    manualSync();
+  } else {
+    autoSyncTimer = setTimeout(manualSync, 2000);
+  }
 }
 
 async function manualSync() {
@@ -1141,9 +1145,12 @@ function renderComments(t) {
       <div class="comment-bubble ${isUnread ? 'bubble-unread' : ''}">${esc(c.text)}</div>
       <div class="comment-footer">
         <span class="comment-ts">${ts}</span>
-        <button class="read-toggle-btn" onclick="toggleCommentRead('${t.id}','${c.id}')">
-          ${isUnread ? '● Mark as read' : '○ Mark as unread'}
-        </button>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="read-toggle-btn" onclick="toggleCommentRead('${t.id}','${c.id}')">
+            ${isUnread ? '● Mark as read' : '○ Mark as unread'}
+          </button>
+          <button class="read-toggle-btn" style="color:var(--danger)" onclick="deleteComment('${t.id}','${c.id}')" title="Delete comment">🗑</button>
+        </div>
       </div>`;
     list.appendChild(wrap);
   });
@@ -1157,8 +1164,18 @@ function toggleCommentRead(taskId, commentId) {
   if (!c) return;
   c.read = !c.read;
   renderComments(t);
-  render();
-  markChanged();
+  renderAll();
+  markChanged(true);
+}
+
+function deleteComment(taskId, commentId) {
+  const t = tasks.find(x => x.id === taskId);
+  if (!t) return;
+  if (!confirm('Delete this comment? This cannot be undone.')) return;
+  t.comments = (t.comments || []).filter(c => c.id !== commentId);
+  renderComments(t);
+  renderAll();
+  markChanged(true);
 }
 
 let currentCommentAs = 'employee'; // 'manager' | 'employee'
@@ -1187,7 +1204,8 @@ function sendComment() {
   });
   inp.value = '';
   renderComments(t);
-  markChanged();
+  renderAll();
+  markChanged(true);
 }
 
 function editCurrentTask() {
