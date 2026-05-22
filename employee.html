@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finance North America — Tasks</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root {
     --primary: #2563eb;
@@ -734,6 +735,53 @@ const BIN_ID     = '69c6bad3b7ec241ddcadafd8';
 const MASTER_KEY = '$2a$10$IJOoc25fj0KwRnNfRoIZj.UVoQfS9fXY6eAXKqJYG/gMhppK9A0/S';
 const JSONBIN    = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
+// ─── EMAILJS CONFIG ───────────────────────────────────
+const EJS_SERVICE  = 'service_qys63ae';
+const EJS_TEMPLATE = 'template_zphn89n';
+const EJS_KEY      = 'WDSA9qsJMxcS12eGv';
+const MANAGER_EMAIL = 'deitan@infinidat.com';
+
+// עדכן כתובות מייל אמיתיות של עובדים כאן
+const EMPLOYEE_EMAILS = {
+  Kim:   'deitan@infinidat.com',
+  Ronit: 'deitan@infinidat.com',
+  Vicky: 'deitan@infinidat.com',
+  Dvir:  'deitan@infinidat.com',
+};
+
+emailjs.init(EJS_KEY);
+
+async function sendEmailNotification(type, task, commentText = '') {
+  const toEmail = EMPLOYEE_EMAILS[EMPLOYEE_NAME] || MANAGER_EMAIL;
+  const taskUrl = `https://deitan-source.github.io/finance-dashboard/employee.html?employee=${encodeURIComponent(EMPLOYEE_NAME)}`;
+
+  let notificationType, notificationBody;
+  if (type === 'new_task') {
+    notificationType = '✦ New Task Added';
+    notificationBody = `A new task has been added to ${esc(EMPLOYEE_NAME)}'s dashboard.`;
+  } else {
+    notificationType = '💬 New Comment';
+    notificationBody = `A new comment was added by <strong>${esc(currentCommentAs === 'manager' ? 'Dvir (Manager)' : EMPLOYEE_NAME)}</strong>:<br><br>"${esc(commentText)}"`;
+  }
+
+  try {
+    await emailjs.send(EJS_SERVICE, EJS_TEMPLATE, {
+      to_email:          toEmail,
+      cc_email:          MANAGER_EMAIL,
+      employee_name:     EMPLOYEE_NAME,
+      notification_type: notificationType,
+      notification_body: notificationBody,
+      task_title:        task.title    || '',
+      task_priority:     task.priority || '',
+      task_due:          task.dueDate  ? fmt(task.dueDate) : 'No due date',
+      task_category:     task.category || '',
+      task_url:          taskUrl,
+    });
+  } catch(e) {
+    console.warn('Email notification failed:', e);
+  }
+}
+
 // ─── STATE ───────────────────────────────────────────
 let EMPLOYEE_NAME = '';
 let IS_MANAGER    = false;
@@ -1059,7 +1107,7 @@ function saveTask() {
       t.dueDate  = due;
     }
   } else {
-    tasks.push({
+    const newTask = {
       id: uid(), title,
       desc:      document.getElementById('taskDesc').value.trim(),
       category:  _cat,
@@ -1069,7 +1117,9 @@ function saveTask() {
       comments:  [],
       createdAt: new Date().toISOString(),
       isNew:     true
-    });
+    };
+    tasks.push(newTask);
+    sendEmailNotification('new_task', newTask);
   }
   closeModal('taskModal');
   renderAll();
@@ -1202,6 +1252,7 @@ function sendComment() {
     ts: new Date().toISOString(),
     read: false
   });
+  sendEmailNotification('new_comment', t, text);
   inp.value = '';
   renderComments(t);
   renderAll();
