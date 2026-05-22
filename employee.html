@@ -761,7 +761,8 @@ async function sendEmailNotification(type, task, commentText = '') {
     notificationBody = `A new task has been added to ${esc(EMPLOYEE_NAME)}'s dashboard.`;
   } else {
     notificationType = '💬 New Comment';
-    notificationBody = `A new comment was added by <strong>${esc(currentCommentAs === 'manager' ? 'Dvir (Manager)' : EMPLOYEE_NAME)}</strong>:<br><br>"${esc(commentText)}"`;
+    const author = currentCommentAs === 'manager' ? 'Dvir (Manager)' : EMPLOYEE_NAME;
+    notificationBody = `A new comment was added by ${author}: "${commentText}"`;
   }
 
   try {
