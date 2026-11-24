@@ -741,7 +741,6 @@ const EJS_TEMPLATE = 'template_zphn89n';
 const EJS_KEY      = 'WDSA9qsJMxcS12eGv';
 const MANAGER_EMAIL = 'deitan@infinidat.com';
 
-// עדכן כתובות מייל אמיתיות של עובדים כאן
 const EMPLOYEE_EMAILS = {
   Kim:   'kwells@infinidat.com',
   Ronit: 'rinbar@infinidat.com',
@@ -749,7 +748,7 @@ const EMPLOYEE_EMAILS = {
   Dvir:  'deitan@infinidat.com',
 };
 
-emailjs.init(EJS_KEY);
+try { emailjs.init(EJS_KEY); } catch(e) { console.warn('EmailJS init failed', e); }
 
 async function sendEmailNotification(type, task, commentText = '') {
   const toEmail = EMPLOYEE_EMAILS[EMPLOYEE_NAME] || MANAGER_EMAIL;
@@ -797,12 +796,26 @@ let _status = 'inprogress';
 const LS_MANAGER = 'fna_is_manager';
 const LS_NAME    = 'fna_employee_name';
 const LS_PREFIX  = 'fna_tasks_';
+const LS_PENDING = 'fna_pending_';
+const LS_V2      = 'fna_v2_';
+
+const KNOWN_EMPLOYEES = ['Kim', 'Ronit', 'Vicky', 'Dvir'];
+const TASK_FIELDS = ['title','desc','category','priority','status','dueDate','isNew','deleted'];
+const TOMBSTONE_DAYS = 30;
+const REFRESH_MS = 5 * 60 * 1000;
+
+// Map "ronit", " Ronit " etc. to the canonical name, so everyone writes to the same list
+function normName(n) {
+  n = String(n || '').trim();
+  const m = KNOWN_EMPLOYEES.find(k => k.toLowerCase() === n.toLowerCase());
+  return m || n;
+}
 
 // ─── INIT ─────────────────────────────────────────────
 function init() {
   const params = new URLSearchParams(window.location.search);
   const urlEmp = params.get('employee');
-  EMPLOYEE_NAME = urlEmp || localStorage.getItem(LS_NAME) || '';
+  EMPLOYEE_NAME = normName(urlEmp || localStorage.getItem(LS_NAME) || '');
   IS_MANAGER    = localStorage.getItem(LS_MANAGER) === 'true';
   applyNameToUI();
 
@@ -810,8 +823,21 @@ function init() {
     openSetupModal(true);
     return;
   }
+  startEmployee();
+}
+
+function startEmployee() {
   loadLocal();
-  loadFromJsonbin();
+  // One-time migration from the old version: treat what is in this browser as
+  // unsynced, so tasks and comments that were overwritten on the server come back.
+  if (localStorage.getItem(LS_V2 + EMPLOYEE_NAME) !== '1') {
+    if (tasks.length) hasUnsavedChanges = true;
+    localStorage.setItem(LS_V2 + EMPLOYEE_NAME, '1');
+  } else {
+    hasUnsavedChanges = localStorage.getItem(LS_PENDING + EMPLOYEE_NAME) === '1';
+  }
+  renderAll();
+  sync();
 }
 
 function applyNameToUI() {
@@ -826,93 +852,192 @@ function lsKey() { return LS_PREFIX + (EMPLOYEE_NAME || '_default'); }
 function loadLocal() {
   try {
     const raw = localStorage.getItem(lsKey());
-    if (raw) tasks = JSON.parse(raw);
-    else tasks = [];
+    tasks = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(tasks)) tasks = [];
   } catch(e) { tasks = []; }
 }
 
 function saveLocal() {
-  localStorage.setItem(lsKey(), JSON.stringify(tasks));
+  try {
+    localStorage.setItem(lsKey(), JSON.stringify(tasks));
+    localStorage.setItem(LS_PENDING + EMPLOYEE_NAME, hasUnsavedChanges ? '1' : '0');
+  } catch(e) { console.warn('Local save failed', e); }
 }
+
+// ─── CHANGE TRACKING (per-field timestamps) ──────────
+function nowIso() { return new Date().toISOString(); }
+
+// Set fields on a task and stamp only the ones that actually changed
+function setFields(t, obj) {
+  const ts = nowIso();
+  t.fu = t.fu || {};
+  let changed = false;
+  for (const k in obj) {
+    if (t[k] !== obj[k]) { t[k] = obj[k]; t.fu[k] = ts; changed = true; }
+  }
+  if (changed) t.updatedAt = ts;
+  return changed;
+}
+
+// ─── MERGE ────────────────────────────────────────────
+function mergeComments(rc, lc) {
+  const map = new Map();
+  (rc || []).forEach(c => map.set(c.id, { ...c }));
+  (lc || []).forEach(c => {
+    const r = map.get(c.id);
+    if (!r) { map.set(c.id, { ...c }); return; }
+    const m = { ...r };
+    if ((c.readAt || '') > (r.readAt || '')) { m.read = c.read; m.readAt = c.readAt; }
+    if (c.deleted || r.deleted) {
+      m.deleted = true; m.text = '';
+      m.deletedAt = [c.deletedAt || '', r.deletedAt || ''].sort().pop();
+    }
+    map.set(c.id, m);
+  });
+  return [...map.values()].sort((a, b) => (a.ts || '').localeCompare(b.ts || ''));
+}
+
+function mergeTask(r, l) {
+  if (r === l) return r;
+  const m = { ...r, fu: { ...(r.fu || {}) } };
+  TASK_FIELDS.forEach(f => {
+    const lt = (l.fu || {})[f] || '';
+    const rt = (r.fu || {})[f] || '';
+    if (lt > rt) { m[f] = l[f]; m.fu[f] = lt; }
+  });
+  m.updatedAt = [r.updatedAt || '', l.updatedAt || ''].sort().pop();
+  m.comments  = mergeComments(r.comments, l.comments);
+  return m;
+}
+
+function mergeLists(remote, local) {
+  const out = new Map();
+  (remote || []).forEach(t => out.set(t.id, t));
+  (local  || []).forEach(t => {
+    const r = out.get(t.id);
+    out.set(t.id, r ? mergeTask(r, t) : t);
+  });
+  return pruneTombstones([...out.values()]);
+}
+
+// Deleted items are kept as markers for a while so a stale tab can't bring them back
+function pruneTombstones(list) {
+  const cut = new Date(Date.now() - TOMBSTONE_DAYS * 864e5).toISOString();
+  return list
+    .filter(t => !(t.deleted && ((t.fu || {}).deleted || '') < cut))
+    .map(t => {
+      if (Array.isArray(t.comments)) {
+        t.comments = t.comments.filter(c => !(c.deleted && (c.deletedAt || '') < cut));
+      }
+      return t;
+    });
+}
+
+const live         = () => tasks.filter(t => !t.deleted);
+const liveComments = t => (t.comments || []).filter(c => !c.deleted);
 
 // ─── JSONBIN API ──────────────────────────────────────
-async function loadFromJsonbin() {
-  if (!EMPLOYEE_NAME) { renderAll(); return; }
-  setSyncStatus('idle', 'Loading...');
-  try {
-    const r    = await fetch(`${JSONBIN}/latest`, {
-      headers: { 'X-Master-Key': MASTER_KEY }
-    });
-    const json = await r.json();
-    const remote = json.record?.[EMPLOYEE_NAME];
-    if (Array.isArray(remote) && remote.length > 0) {
-      tasks = remote;
-      saveLocal();
-    }
-    setSyncStatus('idle', '✓ Connected');
-  } catch(e) {
-    setSyncStatus('error', 'Load failed — check connection');
+async function apiGet() {
+  const r = await fetch(`${JSONBIN}/latest`, {
+    headers: { 'X-Master-Key': MASTER_KEY },
+    cache: 'no-store'
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.record || typeof j.record !== 'object') {
+    throw new Error(j.message || ('HTTP ' + r.status));
   }
-  renderAll();
+  return j.record;
 }
 
-// Called after every local change — saves locally then syncs (immediately or after 2s)
+async function apiPut(record) {
+  const r = await fetch(JSONBIN, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
+    body:    JSON.stringify(record)
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.record) throw new Error(j.message || ('HTTP ' + r.status));
+}
+
+// ─── SYNC ─────────────────────────────────────────────
 let autoSyncTimer = null;
+let syncing   = false;
+let syncAgain = false;
+let changeSeq = 0;
+let lastSyncAt = 0;
+
+// Called after every local change: save locally, then sync shortly after
 function markChanged(syncNow = false) {
-  saveLocal();
+  changeSeq++;
   hasUnsavedChanges = true;
+  saveLocal();
   setSyncStatus('idle', 'Unsaved changes');
-  document.getElementById('syncBtn').style.background = 'var(--warning-light)';
-  document.getElementById('syncBtn').style.color      = 'var(--warning)';
   clearTimeout(autoSyncTimer);
-  if (syncNow) {
-    manualSync();
-  } else {
-    autoSyncTimer = setTimeout(manualSync, 2000);
-  }
+  autoSyncTimer = setTimeout(sync, syncNow ? 0 : 1500);
 }
 
-async function manualSync() {
+// Pull latest from the server, merge with local changes, push only if there is something new
+async function sync() {
   if (!EMPLOYEE_NAME) { openSetupModal(true); return; }
-  const btn = document.getElementById('syncBtn');
+  if (syncing) { syncAgain = true; return; }
+  syncing = true; syncAgain = false;
+
+  const name = EMPLOYEE_NAME;
+  const seq  = changeSeq;
+  const dirty = hasUnsavedChanges;
+  const btn  = document.getElementById('syncBtn');
   btn.disabled = true;
   btn.textContent = '⏳ Syncing...';
-  btn.style.background = '';
-  btn.style.color = '';
-  setSyncStatus('saving', 'Syncing...');
+  setSyncStatus('saving', dirty ? 'Saving…' : 'Refreshing…');
+
   try {
-    // 1. Get current bin (preserve other employees' data)
-    const getRes  = await fetch(`${JSONBIN}/latest`, {
-      headers: { 'X-Master-Key': MASTER_KEY }
-    });
-    const current = await getRes.json();
-    const binData = current.record || { Kim: [], Ronit: [], Vicky: [], Dvir: [] };
-
-    // 2. Update this employee's tasks
-    binData[EMPLOYEE_NAME] = tasks;
-
-    // 3. PUT the full bin back
-    const putRes  = await fetch(JSONBIN, {
-      method:  'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': MASTER_KEY },
-      body:    JSON.stringify(binData)
-    });
-    const result = await putRes.json();
-    if (result.record) {
-      hasUnsavedChanges = false;
-      setSyncStatus('saved', '✓ Synced');
-      btn.textContent = '✓ Synced';
-      setTimeout(() => { btn.textContent = '☁ Sync'; btn.style.background=''; btn.style.color=''; }, 3000);
+    const record = await apiGet();
+    const remote = Array.isArray(record[name]) ? record[name] : [];
+    let merged;
+    if (dirty) {
+      merged = mergeLists(remote, tasks);
+      record[name] = merged;
+      await apiPut(record);
     } else {
-      setSyncStatus('error', 'Sync failed');
-      btn.textContent = '☁ Sync';
+      merged = pruneTombstones(remote);
     }
+    if (name !== EMPLOYEE_NAME) return; // user switched page mid-sync
+
+    // Fold in anything the user changed while we were waiting on the network
+    tasks = (changeSeq !== seq) ? mergeLists(merged, tasks) : merged;
+    if (changeSeq === seq) hasUnsavedChanges = false;
+    saveLocal();
+    lastSyncAt = Date.now();
+
+    const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setSyncStatus(hasUnsavedChanges ? 'idle' : 'saved',
+                  hasUnsavedChanges ? 'Unsaved changes' : `✓ Synced ${t}`);
+    renderAll();
+    refreshOpenDetail();
   } catch(e) {
-    setSyncStatus('error', 'Sync failed — check connection');
+    console.error('Sync failed:', e);
+    setSyncStatus('error', 'Sync failed: ' + e.message);
+    if (dirty) toast('Could not save to server. Changes are kept on this computer and will retry.', 'error');
+  } finally {
+    syncing = false;
+    btn.disabled = false;
     btn.textContent = '☁ Sync';
+    if (syncAgain) setTimeout(sync, 300);
   }
-  btn.disabled = false;
 }
+
+// kept for the header button
+function manualSync() { sync(); }
+
+// Refresh when coming back to the tab, and every few minutes while it is visible
+function maybeRefresh() {
+  if (document.visibilityState !== 'visible' || !EMPLOYEE_NAME) return;
+  if (Date.now() - lastSyncAt < 15000) return;
+  sync();
+}
+document.addEventListener('visibilitychange', maybeRefresh);
+window.addEventListener('focus', maybeRefresh);
+setInterval(maybeRefresh, REFRESH_MS);
 
 function setSyncStatus(s, customText) {
   const pill = document.getElementById('syncPill');
@@ -956,10 +1081,11 @@ function esc(s) {
 
 // ─── RENDER ───────────────────────────────────────────
 function renderAll() {
-  const recurring        = tasks.filter(t => t.category === 'recurring');
+  const all              = live();
+  const recurring        = all.filter(t => t.category === 'recurring');
   const recurPastDue     = recurring.filter(t => isOverdue(t));
   const recurActive      = recurring.filter(t => !isOverdue(t));
-  const ongoing          = tasks.filter(t => t.category !== 'recurring');
+  const ongoing          = all.filter(t => t.category !== 'recurring');
   const pastDue          = ongoing.filter(t => isOverdue(t));
   const inProgress       = ongoing.filter(t => !isOverdue(t) && t.status !== 'done');
   const done             = ongoing.filter(t => t.status === 'done');
@@ -1000,7 +1126,7 @@ function makeCard(t) {
   const statusCls   = t.status === 'done' ? 'status-done' : 'status-inprogress';
   const duePart     = t.dueDate
     ? `<span class="due-chip${over?' overdue':''}">📅 ${fmt(t.dueDate)}</span>` : '';
-  const allComments  = t.comments || [];
+  const allComments  = liveComments(t);
   const unreadCount  = allComments.filter(c => !c.read).length;
   const commentPart  = unreadCount > 0
     ? `<span class="comment-badge has-unread">💬 ${unreadCount}</span>`
@@ -1012,7 +1138,7 @@ function makeCard(t) {
   el.innerHTML = `
     <div class="card-title">${esc(t.title)}</div>
     <div class="card-footer">
-      <span class="priority-badge priority-${prioLabel}">${prioLabel}</span>
+      <span class="priority-badge priority-${esc(prioLabel)}">${esc(prioLabel)}</span>
       <span class="status-chip ${statusCls}">${statusLabel}</span>
       ${duePart}
       ${commentPart}
@@ -1032,10 +1158,9 @@ function toggleSection(name) {
 
 function toggleSub(name, e) {
   if (e) e.stopPropagation();
-  const ids = { pastDue:'pastDue', inProgress:'inProgress', done:'done' };
-  const k = ids[name];
-  const body   = document.getElementById(k + 'Body');
-  const toggle = document.getElementById(k + 'Toggle');
+  const body   = document.getElementById(name + 'Body');
+  const toggle = document.getElementById(name + 'Toggle');
+  if (!body || !toggle) return;
   const hide   = !body.classList.contains('hidden');
   body.classList.toggle('hidden', hide);
   toggle.classList.toggle('closed', hide);
@@ -1057,7 +1182,7 @@ function openAddTask(defaultCat, e) {
 }
 
 function openEditTask(id) {
-  const t = tasks.find(x => x.id === id);
+  const t = tasks.find(x => x.id === id && !x.deleted);
   if (!t) return;
   editingTaskId = id;
   document.getElementById('taskModalTitle').textContent = 'Edit Task';
@@ -1095,64 +1220,80 @@ function setStatus(s) {
 function saveTask() {
   const title = document.getElementById('taskTitle').value.trim();
   if (!title) { toast('Please enter a title', 'error'); return; }
-  const due = document.getElementById('taskDue').value || '';
+  const due  = document.getElementById('taskDue').value || '';
+  const desc = document.getElementById('taskDesc').value.trim();
+  const wasEdit = !!editingTaskId;
 
-  if (editingTaskId) {
+  if (wasEdit) {
     const t = tasks.find(x => x.id === editingTaskId);
-    if (t) {
-      t.title    = title;
-      t.desc     = document.getElementById('taskDesc').value.trim();
-      t.category = _cat;
-      t.priority = _prio;
-      t.status   = _status;
-      t.dueDate  = due;
-    }
+    if (t) setFields(t, { title, desc, category: _cat, priority: _prio, status: _status, dueDate: due });
   } else {
+    const ts = nowIso();
     const newTask = {
-      id: uid(), title,
-      desc:      document.getElementById('taskDesc').value.trim(),
+      id: uid(), title, desc,
       category:  _cat,
       priority:  _prio,
       status:    _status,
       dueDate:   due,
       comments:  [],
-      createdAt: new Date().toISOString(),
-      isNew:     true
+      createdAt: ts,
+      updatedAt: ts,
+      isNew:     true,
+      deleted:   false,
+      fu: {}
     };
+    TASK_FIELDS.forEach(f => newTask.fu[f] = ts);
     tasks.push(newTask);
     sendEmailNotification('new_task', newTask);
   }
   closeModal('taskModal');
   renderAll();
   markChanged();
-  toast(editingTaskId ? 'Task updated' : 'Task added', 'success');
+  toast(wasEdit ? 'Task updated' : 'Task added', 'success');
 }
 
 function deleteCurrentTask() {
   if (!editingTaskId) return;
   if (!confirm('Delete this task? This cannot be undone.')) return;
-  tasks = tasks.filter(t => t.id !== editingTaskId);
+  const t = tasks.find(x => x.id === editingTaskId);
+  if (t) setFields(t, { deleted: true });
   closeModal('taskModal');
   renderAll();
-  markChanged();
+  markChanged(true);
   toast('Task deleted');
 }
 
 // ─── DETAIL MODAL ────────────────────────────────────
 function openDetail(id) {
-  const t = tasks.find(x => x.id === id);
+  const t = tasks.find(x => x.id === id && !x.deleted);
   if (!t) return;
   viewingTaskId = id;
 
+  // Auto-clear "new" highlight when task is opened
+  if (t.isNew) {
+    setFields(t, { isNew: false });
+    renderAll();
+    markChanged();
+  }
+
+  fillDetail(t);
+  const empBtn = document.getElementById('caBtnEmployee');
+  empBtn.textContent = EMPLOYEE_NAME || 'Employee';
+  setCommentAs(IS_MANAGER ? 'manager' : 'employee');
+  document.getElementById('commentInput').value = '';
+  openModal('detailModal');
+}
+
+function fillDetail(t) {
   const over = isOverdue(t);
-  const pCls = `priority-${t.priority||'medium'}`;
+  const pCls = `priority-${esc(t.priority||'medium')}`;
   const sCls = t.status==='done' ? 'status-done' : 'status-inprogress';
   const sLbl = t.status==='done' ? 'Done' : 'In Progress';
   const catCls = t.category==='recurring' ? 'chip chip-recurring' : 'chip chip-ongoing';
   const catLbl = t.category==='recurring' ? '♻ Recurring' : '📋 Ongoing';
 
   document.getElementById('detailChips').innerHTML = `
-    <span class="priority-badge ${pCls}">${t.priority||'medium'}</span>
+    <span class="priority-badge ${pCls}">${esc(t.priority||'medium')}</span>
     <span class="status-chip ${sCls}">${sLbl}</span>
     <span class="${catCls}">${catLbl}</span>
     ${over ? '<span class="chip chip-pastdue">⚠ Past Due</span>' : ''}
@@ -1166,27 +1307,27 @@ function openDetail(id) {
     ? `<span>📅</span> <strong>Due:</strong>&nbsp;${fmt(t.dueDate)}&ensp;·&ensp;<span style="color:${over?'var(--danger)':'var(--gray-500)'}">${rel}</span>`
     : '<span style="color:var(--gray-400)">No due date</span>';
 
-  // Auto-clear "new" highlight when task is opened
-  if (t.isNew) {
-    t.isNew = false;
-    markChanged();
-  }
-
-  renderComments(t);
-  // Set up the "Commenting as" toggle
-  const empBtn = document.getElementById('caBtnEmployee');
-  empBtn.textContent = EMPLOYEE_NAME || 'Employee';
-  setCommentAs(IS_MANAGER ? 'manager' : 'employee');
-  document.getElementById('commentInput').value = '';
-  // Update "Mark as New" button label
   document.getElementById('markNewBtn').textContent = t.isNew ? '✦ Remove New' : '✦ Mark as New';
-  openModal('detailModal');
+  renderComments(t);
+}
+
+// After a sync, update the open task window with what others changed
+function refreshOpenDetail() {
+  if (!viewingTaskId || !document.getElementById('detailModal').classList.contains('open')) return;
+  const t = tasks.find(x => x.id === viewingTaskId);
+  if (!t || t.deleted) {
+    closeModal('detailModal');
+    toast('This task was deleted by someone else');
+    return;
+  }
+  fillDetail(t);
 }
 
 function renderComments(t) {
   const list = document.getElementById('commentsList');
+  const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 20;
   list.innerHTML = '';
-  (t.comments||[]).forEach(c => {
+  liveComments(t).forEach(c => {
     const wrap = document.createElement('div');
     wrap.className = 'comment-wrapper ' + (c.isManager ? 'manager' : 'employee');
     const ts = c.ts ? new Date(c.ts).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
@@ -1197,15 +1338,16 @@ function renderComments(t) {
       <div class="comment-footer">
         <span class="comment-ts">${ts}</span>
         <div style="display:flex;gap:4px;align-items:center;">
-          <button class="read-toggle-btn" onclick="toggleCommentRead('${t.id}','${c.id}')">
+          <button class="read-toggle-btn" onclick="toggleCommentRead('${esc(t.id)}','${esc(c.id)}')">
             ${isUnread ? '● Mark as read' : '○ Mark as unread'}
           </button>
-          <button class="read-toggle-btn" style="color:var(--danger)" onclick="deleteComment('${t.id}','${c.id}')" title="Delete comment">🗑</button>
+          <button class="read-toggle-btn" style="color:var(--danger)" onclick="deleteComment('${esc(t.id)}','${esc(c.id)}')" title="Delete comment">🗑</button>
         </div>
       </div>`;
     list.appendChild(wrap);
   });
-  list.scrollTop = list.scrollHeight;
+  if (atBottom || list.dataset.task !== t.id) list.scrollTop = list.scrollHeight;
+  list.dataset.task = t.id;
 }
 
 function toggleCommentRead(taskId, commentId) {
@@ -1214,6 +1356,7 @@ function toggleCommentRead(taskId, commentId) {
   const c = (t.comments||[]).find(x => x.id === commentId);
   if (!c) return;
   c.read = !c.read;
+  c.readAt = nowIso();
   renderComments(t);
   renderAll();
   markChanged(true);
@@ -1223,7 +1366,11 @@ function deleteComment(taskId, commentId) {
   const t = tasks.find(x => x.id === taskId);
   if (!t) return;
   if (!confirm('Delete this comment? This cannot be undone.')) return;
-  t.comments = (t.comments || []).filter(c => c.id !== commentId);
+  const c = (t.comments||[]).find(x => x.id === commentId);
+  if (!c) return;
+  c.deleted = true;
+  c.deletedAt = nowIso();
+  c.text = '';
   renderComments(t);
   renderAll();
   markChanged(true);
@@ -1250,14 +1397,20 @@ function sendComment() {
     author: asManager ? 'Dvir' : (EMPLOYEE_NAME || 'Employee'),
     isManager: asManager,
     text,
-    ts: new Date().toISOString(),
+    ts: nowIso(),
     read: false
   });
   sendEmailNotification('new_comment', t, text);
   inp.value = '';
+  list_scroll_bottom();
   renderComments(t);
   renderAll();
   markChanged(true);
+}
+
+function list_scroll_bottom() {
+  const list = document.getElementById('commentsList');
+  list.dataset.task = '';
 }
 
 function editCurrentTask() {
@@ -1267,7 +1420,7 @@ function editCurrentTask() {
 function toggleNew() {
   const t = tasks.find(x => x.id === viewingTaskId);
   if (!t) return;
-  t.isNew = !t.isNew;
+  setFields(t, { isNew: !t.isNew });
   document.getElementById('markNewBtn').textContent = t.isNew ? '✦ Remove New' : '✦ Mark as New';
   renderAll();
   markChanged();
@@ -1285,7 +1438,7 @@ function openSetupModal(force) {
 }
 
 function saveSetup() {
-  const name = document.getElementById('setupName').value.trim();
+  const name = normName(document.getElementById('setupName').value);
   if (!name) { toast('Please enter your name', 'error'); return; }
   EMPLOYEE_NAME = name;
   IS_MANAGER    = document.getElementById('setupIsManager').checked;
@@ -1293,8 +1446,8 @@ function saveSetup() {
   localStorage.setItem(LS_MANAGER, String(IS_MANAGER));
   applyNameToUI();
   closeModal('setupModal');
-  loadLocal();
-  loadFromJsonbin();
+  hasUnsavedChanges = false;
+  startEmployee();
   toast('Setup saved', 'success');
 }
 

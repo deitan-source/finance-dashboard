@@ -396,14 +396,16 @@ function init() {
 async function loadAll() {
   setSyncStatus('loading');
   try {
-    const r    = await fetch(`${JSONBIN}/latest`, { headers: { 'X-Master-Key': MASTER_KEY } });
-    const json = await r.json();
-    if (json.record && typeof json.record === 'object') {
-      allData = json.record;
+    const r    = await fetch(`${JSONBIN}/latest`, { headers: { 'X-Master-Key': MASTER_KEY }, cache: 'no-store' });
+    const json = await r.json().catch(() => ({}));
+    if (!r.ok || !json.record || typeof json.record !== 'object') {
+      throw new Error(json.message || ('HTTP ' + r.status));
     }
+    allData = json.record;
     setSyncStatus('ok');
     renderCards(allData);
   } catch(e) {
+    console.error('Load failed:', e);
     setSyncStatus('error');
     renderCards(allData);
   }
@@ -419,6 +421,7 @@ function isOverdue(t) {
 
 function getStats(tasks) {
   if (!tasks) return null;
+  tasks = tasks.filter(t => !t.deleted);
   const total    = tasks.length;
   const pastDue  = tasks.filter(t => isOverdue(t)).length;
   const inProg   = tasks.filter(t => !isOverdue(t) && t.status !== 'done').length;
@@ -547,6 +550,17 @@ function toast(msg, type='') {
   c.appendChild(el);
   setTimeout(() => el.remove(), 3200);
 }
+
+// Refresh when returning to the tab and every 5 minutes while visible
+let lastLoad = 0;
+function maybeRefresh() {
+  if (document.visibilityState !== 'visible' || Date.now() - lastLoad < 15000) return;
+  lastLoad = Date.now();
+  loadAll();
+}
+document.addEventListener('visibilitychange', maybeRefresh);
+window.addEventListener('focus', maybeRefresh);
+setInterval(maybeRefresh, 5 * 60 * 1000);
 
 // ─── BOOT ─────────────────────────────────────────────
 init();
